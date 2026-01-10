@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gordon's Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 0, 150, 0.15) 0%, transparent 50%);
+            animation: bgShift 20s ease infinite;
+            pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0% { opacity: 0.6; transform: scale(1) rotate(0deg); }
+            33% { opacity: 0.8; transform: scale(1.1) rotate(120deg); }
+            66% { opacity: 0.7; transform: scale(0.95) rotate(240deg); }
+            100% { opacity: 0.6; transform: scale(1) rotate(360deg); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ffff;
+            font-size: 3.5em;
+            margin-bottom: 60px;
+            text-shadow: 
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 30px #00ffff,
+                0 0 40px #0080ff;
+            animation: flicker 3s infinite alternate;
+            letter-spacing: 5px;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+            75% { opacity: 0.9; }
+        }
+
+        /* Auth Screen Styles */
+        .auth-container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 
+                0 0 30px rgba(0, 255, 255, 0.4),
+                inset 0 0 20px rgba(0, 255, 255, 0.05);
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .auth-title {
+            font-size: 2em;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #00ffff;
+            letter-spacing: 3px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #00ffff;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .auth-button {
+            width: 100%;
+            background: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 15px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px #00ffff;
+            margin-bottom: 15px;
+        }
+
+        .auth-button:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 20px #00ffff;
+            text-shadow: none;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            color: #aaa;
+            margin-top: 20px;
+        }
+
+        .auth-toggle a {
+            color: #00ffff;
+            text-decoration: none;
+            cursor: pointer;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .delete-account-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .delete-account-btn {
+            background: transparent;
+            color: #ff4444;
+            border: 2px solid #ff4444;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px #ff4444;
+        }
+
+        .delete-account-btn:hover {
+            background: #ff4444;
+            color: #000;
+            box-shadow: 0 0 15px #ff4444;
+            text-shadow: none;
+        }
+
+        .warning-text {
+            color: #ff8888;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff6666;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .success-message {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #66ff66;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .password-display {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+            color: #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
+        }
+
+        .password-display .password-label {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .password-display .password-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid #ff00ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 
+                0 0 30px rgba(255, 0, 255, 0.4),
+                inset 0 0 20px rgba(255, 0, 255, 0.05);
+        }
+
+        .admin-title {
+            color: #ff00ff;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff00ff;
+            text-align: center;
+        }
+
+        .whitelist-section {
+            margin-bottom: 20px;
+        }
+
+        .whitelist-section h3 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .whitelist-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .whitelist-input input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .whitelist-input button {
+            padding: 12px 25px;
+            background: transparent;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .whitelist-input button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .whitelist-list {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .whitelist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .remove-btn {
+            background: transparent;
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            padding: 5px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: #ff6666;
+            border: 2px solid #ff6666;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .logout-btn:hover {
+            background: #ff6666;
+            color: #000;
+            box-shadow: 0 0 15px #ff6666;
+        }
+
+        /* Password Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        /* Games Grid Styles */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .game-card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .game-card:nth-child(1) { animation-delay: 0.2s; }
+        .game-card:nth-child(2) { animation-delay: 0.4s; }
+        .game-card:nth-child(3) { animation-delay: 0.6s; }
+        .game-card:nth-child(4) { animation-delay: 0.8s; }
+        .game-card:nth-child(5) { animation-delay: 1.0s; }
+        .game-card:nth-child(6) { animation-delay: 1.2s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 
+                0 0 40px rgba(0, 255, 255, 0.6),
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .game-title {
+            font-size: 1.8em;
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+            letter-spacing: 2px;
+        }
+
+        .game-description {
+            color: #aaaaaa;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            flex-grow: 1;
+            text-shadow: 0 0 5px rgba(170, 170, 170, 0.5);
+        }
+
+        .play-button {
+            background: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .play-button:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 20px #00ffff;
+            text-shadow: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+                letter-spacing: 3px;
+            }
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="grid-overlay"></div>
+    
+    <!-- Auth Screen -->
+    <div id="authScreen" class="container">
+        <h1>🎮 GORDON'S GAMES 🎮</h1>
+        <div class="auth-container">
+            <div class="auth-title" id="authTitle">LOGIN</div>
+            <div id="errorMessage"></div>
+            <div id="successMessage"></div>
+            <div id="passwordDisplay"></div>
+            
+            <form id="authForm">
+                <div class="input-group">
+                    <label for="username">USERNAME</label>
+                    <input type="text" id="username" autocomplete="off" required>
+                </div>
+                <div class="input-group" id="passwordGroup">
+                    <label for="password">PASSWORD</label>
+                    <input type="password" id="password" autocomplete="off" required>
+                </div>
+                <button type="submit" class="auth-button" id="authSubmit">ENTER</button>
+            </form>
+            
+            <div id="deleteAccountSection" class="delete-account-section hidden">
+                <div class="warning-text">⚠️ This device already has an account</div>
+                <button class="delete-account-btn" onclick="deleteAccount()">DELETE OLD ACCOUNT & CREATE NEW</button>
+            </div>
+
+            <div class="auth-toggle">
+                <span id="toggleText">Don't have an account? <a id="toggleLink">Sign Up</a></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-title">🔐 ENTER SECRET PASSWORD</div>
+            <div id="modalError"></div>
+            <form id="passwordForm">
+                <div class="input-group">
+                    <label for="gamePassword">SECRET PASSWORD</label>
+                    <input type="password" id="gamePassword" autocomplete="off" required>
+                </div>
+                <button type="submit" class="auth-button">UNLOCK GAME</button>
+                <button type="button" class="auth-button" style="background: rgba(255, 0, 0, 0.2); border-color: #ff6666; color: #ff6666;" onclick="closePasswordModal()">CANCEL</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content (Games + Admin Panel) -->
+    <div id="mainContent" class="container hidden">
+        <h1>🎮 GORDON'S GAMES 🎮</h1>
+        
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <div class="admin-title">🔐 ADMIN CONTROL PANEL 🔐</div>
+            <div class="whitelist-section">
+                <h3>Whitelist Management</h3>
+                <div class="whitelist-input">
+                    <input type="text" id="whitelistUsername" placeholder="Enter username to whitelist">
+                    <button onclick="addToWhitelist()">ADD USER</button>
+                </div>
+                <div class="whitelist-list" id="whitelistList"></div>
+            </div>
+        </div>
+
+        <div class="games-grid">
+            <div class="game-card">
+                <div class="game-title">SANS FIGHT</div>
+                <div class="game-description">
+                    Face off against one of gaming's most iconic characters. Dodge intricate attack patterns, time your moves perfectly, and survive the legendary Sans encounter.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Sans_Fight/')">PLAY NOW</button>
+            </div>
+
+            <div class="game-card">
+                <div class="game-title">TOWER DEFENCE</div>
+                <div class="game-description">
+                    Strategically place towers and defend your base against waves of relentless enemies. Upgrade your defenses and adapt your strategy as the challenge intensifies.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Tower_Defence-V1/')">PLAY NOW</button>
+            </div>
+
+            <div class="game-card">
+                <div class="game-title">SUPER MARIO</div>
+                <div class="game-description">
+                    Jump, run, and stomp through classic platforming levels! Move with Arrow Keys or WASD, jump with Space/W/↑, fire with K (configurable), and restart with R.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Super_Mario/')">PLAY NOW</button>
+            </div>
+
+            <div class="game-card">
+                <div class="game-title">GORDON'S<br>SMART BRAIN</div>
+                <div class="game-description">
+                    Your ultimate AI assistant—generate images, search the web, analyze data, write & debug code, summarize documents, translate languages, and more.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Gordon_s_Smart_Brain/')">PLAY NOW</button>
+            </div>
+
+            <div class="game-card">
+                <div class="game-title">SECRET</div>
+                <div class="game-description">
+                    Enter the shadows and uncover what lies beyond the veil. This cryptic experience challenges perception and defies explanation. Only the brave will discover its true nature.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/secret/')">PLAY NOW</button>
+            </div>
+
+            <div class="game-card">
+                <div class="game-title">MYSTERY GAME</div>
+                <div class="game-description">
+                    Embark on an enigmatic adventure where every click reveals new surprises. Discover hidden secrets and test your skills in this mysterious experience.
+                </div>
+                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/-_-/')">PLAY NOW</button>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">LOGOUT</button>
+    </div>
+
+    <script>
+        // Generate stars
+        const starsContainer = document.querySelector('.stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Auth System
+        let isLoginMode = true;
+        const ADMIN_PASSWORD = 'hacker67';
+        let pendingGameUrl = null;
+        
+        // Device ID generation
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Generate random password
+        function generatePassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // User data management
+        function getUserData(username) {
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            return users[username.toLowerCase()];
+        }
+
+        function saveUserData(username, data) {
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            users[username.toLowerCase()] = data;
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Check if user is registered on this device
+        function isUserRegistered() {
+            return localStorage.getItem('registeredUser') !== null;
+        }
+
+        // Get registered username
+        function getRegisteredUser() {
+            return localStorage.getItem('registeredUser');
+        }
+
+        // Register user on this device
+        function registerUser(username, password) {
+            localStorage.setItem('registeredUser', username);
+            localStorage.setItem('registrationDate', new Date().toISOString());
+            const deviceId = getDeviceId();
+            saveUserData(username, {
+                password: password,
+                deviceId: deviceId,
+                createdAt: new Date().toISOString()
+            });
+        }
+
+        // Whitelist management
+        function getWhitelist() {
+            const whitelist = localStorage.getItem('whitelist');
+            return whitelist ? JSON.parse(whitelist) : [];
+        }
+
+        function saveWhitelist(whitelist) {
+            localStorage.setItem('whitelist', JSON.stringify(whitelist));
+        }
+
+        function isWhitelisted(username) {
+            const whitelist = getWhitelist();
+            return whitelist.includes(username.toLowerCase());
+        }
+
+        function addToWhitelist() {
+            const input = document.getElementById('whitelistUsername');
+            const username = input.value.trim().toLowerCase();
+            
+            if (!username) {
+                showError('Please enter a username');
+                return;
+            }
+
+            const whitelist = getWhitelist();
+            if (whitelist.includes(username)) {
+                showError('User already whitelisted');
+                return;
+            }
+
+            whitelist.push(username);
+            saveWhitelist(whitelist);
+            input.value = '';
+            renderWhitelist();
+            showSuccess('User added to whitelist');
+        }
+
+        function removeFromWhitelist(username) {
+            let whitelist = getWhitelist();
+            whitelist = whitelist.filter(u => u !== username);
+            saveWhitelist(whitelist);
+            renderWhitelist();
+            showSuccess('User removed from whitelist');
+        }
+
+        function renderWhitelist() {
+            const list = document.getElementById('whitelistList');
+            const whitelist = getWhitelist();
+            
+            if (whitelist.length === 0) {
+                list.innerHTML = '<p style="color: #aaa; text-align: center;">No users whitelisted</p>';
+                return;
+            }
+
+            list.innerHTML = whitelist.map(username => `
+                <div class="whitelist-item">
+                    <span>${username}</span>
+                    <button class="remove-btn" onclick="removeFromWhitelist('${username}')">REMOVE</button>
+                </div>
+            `).join('');
+        }
+
+        // Check access on page load
+        function checkAccess() {
+            const registeredUser = getRegisteredUser();
+            
+            // Show delete button if user is registered (except admin)
+            if (registeredUser && registeredUser !== ADMIN_PASSWORD) {
+                document.getElementById('deleteAccountSection').classList.remove('hidden');
+            }
+            
+            // Admin check
+            if (registeredUser === ADMIN_PASSWORD) {
+                showMainContent(true);
+                return;
+            }
+
+            // Regular user check
+            if (registeredUser && isWhitelisted(registeredUser)) {
+                const userData = getUserData(registeredUser);
+                if (userData) {
+                    showMainContent(false);
+                    return;
+                }
+            }
+
+            // If user is registered but not whitelisted
+            if (registeredUser && !isWhitelisted(registeredUser)) {
+                showError('Access denied. You are not whitelisted.');
+                setTimeout(() => {
+                    window.location.href = 'about:blank';
+                }, 2000);
+                return;
+            }
+
+            // Show auth screen
+            document.getElementById('authScreen').classList.remove('hidden');
+        }
+
+        // Show main content
+        function showMainContent(isAdmin) {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            
+            if (isAdmin) {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                renderWhitelist();
+            }
+        }
+
+        // Auth form handling
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username) {
+                showError('Please enter a username');
+                return;
+            }
+
+            if (isLoginMode) {
+                // Login logic
+                const registeredUser = getRegisteredUser();
+                
+                // Admin login
+                if (username === ADMIN_PASSWORD) {
+                    if (registeredUser && registeredUser !== ADMIN_PASSWORD) {
+                        showError('This device is already registered to another user');
+                        return;
+                    }
+                    registerUser(ADMIN_PASSWORD, ADMIN_PASSWORD);
+                    showSuccess('Admin access granted!');
+                    setTimeout(() => showMainContent(true), 1000);
+                    return;
+                }
+
+                // Regular user login
+                if (!registeredUser) {
+                    showError('No account found on this device. Please sign up first.');
+                    return;
+                }
+
+                if (registeredUser.toLowerCase() !== username.toLowerCase()) {
+                    showError('This username does not match the registered account on this device');
+                    return;
+                }
+
+                if (!isWhitelisted(username)) {
+                    showError('Access denied. You are not whitelisted.');
+                    setTimeout(() => {
+                        window.location.href = 'about:blank';
+                    }, 2000);
+                    return;
+                }
+
+                const userData = getUserData(username);
+                if (!userData || userData.password !== password) {
+                    showError('Incorrect password');
+                    return;
+                }
+
+                showSuccess('Welcome back, ' + username + '!');
+                setTimeout(() => showMainContent(false), 1000);
+            } else {
+                // Signup logic
+                if (isUserRegistered()) {
+                    // Show delete button and error
+                    document.getElementById('deleteAccountSection').classList.remove('hidden');
+                    showError('This device already has a registered account');
+                    return;
+                }
+
+                // Check if admin password is being used
+                if (username === ADMIN_PASSWORD) {
+                    registerUser(ADMIN_PASSWORD, ADMIN_PASSWORD);
+                    showSuccess('Admin account created!');
+                    setTimeout(() => showMainContent(true), 1000);
+                    return;
+                }
+
+                // Check if whitelisted
+                if (!isWhitelisted(username)) {
+                    showError('Access denied. You are not whitelisted. Contact the admin.');
+                    return;
+                }
+
+                const newPassword = generatePassword();
+                registerUser(username, newPassword);
+                
+                // Display password
+                document.getElementById('passwordDisplay').innerHTML = `
+                    <div class="password-display">
+                        <div class="password-label">⚠️ YOUR SECRET PASSWORD ⚠️</div>
+                        <div class="password-value">${newPassword}</div>
+                        <div class="password-label" style="margin-top: 10px; font-size: 0.85em;">Write this down! You'll need it to access games.</div>
+                    </div>
+                `;
+                
+                showSuccess('Account created! Save your password!');
+                setTimeout(() => showMainContent(false), 5000);
+            }
+        });
+
+        // Toggle between login and signup
+        document.getElementById('toggleLink').addEventListener('click', function() {
+            isLoginMode = !isLoginMode;
+            const passwordGroup = document.getElementById('passwordGroup');
+            
+            if (isLoginMode) {
+                passwordGroup.style.display = 'block';
+                document.getElementById('authTitle').textContent = 'LOGIN';
+                document.getElementById('authSubmit').textContent = 'ENTER';
+                document.getElementById('toggleText').innerHTML = 'Don\'t have an account? <a id="toggleLink">Sign Up</a>';
+            } else {
+                passwordGroup.style.display = 'none';
+                document.getElementById('authTitle').textContent = 'SIGN UP';
+                document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
+                document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
+            }
+            
+            // Re-attach event listener
+            document.getElementById('toggleLink').addEventListener('click', arguments.callee);
+            clearMessages();
+        });
+
+        // Game access with password
+        function requestGameAccess(url) {
+            const registeredUser = getRegisteredUser();
+            
+            // Admin bypass
+            if (registeredUser === ADMIN_PASSWORD) {
+                window.open(url, '_blank');
+                return;
+            }
+            
+            pendingGameUrl = url;
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('gamePassword').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+            document.getElementById('gamePassword').value = '';
+            document.getElementById('modalError').innerHTML = '';
+            pendingGameUrl = null;
+        }
+
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const enteredPassword = document.getElementById('gamePassword').value;
+            const registeredUser = getRegisteredUser();
+            const userData = getUserData(registeredUser);
+            
+            if (userData && userData.password === enteredPassword) {
+                window.open(pendingGameUrl, '_blank');
+                closePasswordModal();
+            } else {
+                document.getElementById('modalError').innerHTML = '<div class="error-message">Incorrect password!</div>';
+            }
+        });
+
+        // Logout
+        function logout() {
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('passwordDisplay').innerHTML = '';
+            clearMessages();
+        }
+
+        // Delete account function
+        function deleteAccount() {
+            if (!confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
+                return;
+            }
+
+            const registeredUser = getRegisteredUser();
+            
+            if (!registeredUser || registeredUser === ADMIN_PASSWORD) {
+                showError('Cannot delete admin account');
+                return;
+            }
+
+            // Remove user data
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            delete users[registeredUser.toLowerCase()];
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Clear registration
+            localStorage.removeItem('registeredUser');
+            localStorage.removeItem('registrationDate');
+            
+            // Hide delete button and show success
+            document.getElementById('deleteAccountSection').classList.add('hidden');
+            showSuccess('Account deleted! You can now create a new account.');
+            
+            // Clear form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('passwordDisplay').innerHTML = '';
+            
+            // Switch to signup mode
+            isLoginMode = false;
+            document.getElementById('passwordGroup').style.display = 'none';
+            document.getElementById('authTitle').textContent = 'SIGN UP';
+            document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
+            document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
+            
+            // Re-attach toggle event listener
+            document.getElementById('toggleLink').addEventListener('click', function() {
+                isLoginMode = !isLoginMode;
+                const passwordGroup = document.getElementById('passwordGroup');
+                
+                if (isLoginMode) {
+                    passwordGroup.style.display = 'block';
+                    document.getElementById('authTitle').textContent = 'LOGIN';
+                    document.getElementById('authSubmit').textContent = 'ENTER';
+                    document.getElementById('toggleText').innerHTML = 'Don\'t have an account? <a id="toggleLink">Sign Up</a>';
+                } else {
+                    passwordGroup.style.display = 'none';
+                    document.getElementById('authTitle').textContent = 'SIGN UP';
+                    document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
+                    document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
+                }
+                
+                document.getElementById('toggleLink').addEventListener('click', arguments.callee);
+                clearMessages();
+            });
+        }
+
+        // Message functions
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(clearMessages, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.innerHTML = `<div class="success-message">${message}</div>`;
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').innerHTML = '';
+            document.getElementById('successMessage').innerHTML = '';
+        }
+
+        // Initialize on page load
+        getDeviceId(); // Initialize device ID
+        checkAccess();
+    </script>
+</body>
+</html>
