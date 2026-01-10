@@ -1,1108 +1,2048 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gordon's Games</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEON SHOOTER | Gordon</title>
+  <style>
+    /* ... [ALL STYLES FROM v6.9] ... */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      color: #0ff;
+      user-select: none;
+    }
+    canvas {
+      display: block;
+      background: #050510;
+    }
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      text-shadow: 0 0 5px #0ff;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #coins-display {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 18px;
+      color: gold;
+      text-shadow: 0 0 5px #ff0;
+      z-index: 11;
+    }
+    #radar {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 150px;
+      height: 150px;
+      border: 2px solid #0ff;
+      border-radius: 50%;
+      background: rgba(0,10,20,0.4);
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #radar canvas { background: transparent; }
 
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0a0a;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-            position: relative;
-        }
+    /* Ability Cooldowns */
+    #abilities {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 10;
+    }
+    .ability-key {
+      width: 60px;
+      height: 60px;
+      position: relative;
+    }
+    .key-label {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #0ff;
+      background: rgba(0,10,20,0.5);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+    }
+    .cooldown-mask {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: 8px;
+      clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+      background: rgba(0,0,0,0.7);
+      transition: clip-path 0.1s;
+    }
+    .cooldown-text {
+      position: absolute;
+      bottom: -24px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #ff5;
+      text-shadow: 0 0 3px #f50;
+    }
 
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
+    /* Screens */
+    .screen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,5,15,0.9);
+      z-index: 100;
+    }
+    #login-screen, #title-screen, #avatar-screen, #game-over-screen { display: flex; }
+    #game-screen { display: none; }
 
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #fff;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-        }
+    .screen-title {
+      font-size: 48px;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #0ff, 0 0 20px #00f;
+      text-align: center;
+    }
+    .screen-title span { display: block; }
 
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.2; }
-            50% { opacity: 1; }
-        }
+    .login-form, .signup-form {
+      background: rgba(0,15,30,0.7);
+      padding: 30px;
+      border-radius: 12px;
+      border: 2px solid #0ff;
+      width: 320px;
+      text-align: center;
+    }
+    .form-group {
+      margin: 15px 0;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 16px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      background: #000;
+      border: 1px solid #0af;
+      color: #0ff;
+      font-family: inherit;
+      font-size: 16px;
+    }
+    .btn {
+      padding: 12px 30px;
+      font-size: 20px;
+      background: #0ff;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 10px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #0af; transform: scale(1.05); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .switch-form {
+      color: #0af;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 10px;
+      display: block;
+    }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(255, 0, 150, 0.15) 0%, transparent 50%);
-            animation: bgShift 20s ease infinite;
-            pointer-events: none;
-        }
+    /* Avatar Grid */
+    #avatars {
+      display: flex;
+      gap: 30px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .avatar-card {
+      width: 220px;
+      padding: 16px;
+      background: rgba(0,20,40,0.6);
+      border: 2px solid #0ff;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .avatar-card:hover:not(.locked):not(.selected) { 
+      transform: translateY(-6px) scale(1.02);
+      border-color: #fff;
+      box-shadow: 0 0 15px #0ff;
+    }
+    .avatar-card.selected {
+      border-color: #f0f;
+      background: rgba(30,0,30,0.8);
+      box-shadow: 0 0 20px #f0f;
+    }
+    .avatar-card.locked {
+      opacity: 0.6;
+      cursor: default;
+      border-color: #555;
+    }
+    .avatar-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+    }
+    .avatar-name {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+    .avatar-desc {
+      font-size: 13px;
+      margin: 4px 0;
+      color: #99f;
+    }
+    .avatar-stats {
+      font-size: 12px;
+      color: #0f8;
+      margin: 6px 0;
+    }
+    .avatar-abilities {
+      font-size: 12px;
+      margin-top: 10px;
+      color: #ff8;
+    }
+    .key-hint {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #000;
+      border: 1px solid #0ff;
+      border-radius: 4px;
+      margin: 0 2px;
+      font-size: 11px;
+      line-height: 20px;
+    }
+    .unlock-cost {
+      font-size: 14px;
+      color: gold;
+      margin-top: 8px;
+    }
 
-        @keyframes bgShift {
-            0% { opacity: 0.6; transform: scale(1) rotate(0deg); }
-            33% { opacity: 0.8; transform: scale(1.1) rotate(120deg); }
-            66% { opacity: 0.7; transform: scale(0.95) rotate(240deg); }
-            100% { opacity: 0.6; transform: scale(1) rotate(360deg); }
-        }
+    /* Leaderboard */
+    #leaderboard {
+      position: absolute;
+      top: 120px;
+      right: 10px;
+      width: 220px;
+      background: rgba(0,10,20,0.6);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      z-index: 10;
+    }
+    .lb-title {
+      text-align: center;
+      margin-bottom: 8px;
+      color: #0ff;
+      font-weight: bold;
+    }
+    .lb-entry {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #050;
+    }
+    .lb-rank { width: 24px; color: #ff5; }
+    .lb-name { flex: 1; color: #0af; }
+    .lb-score { color: #0f8; }
 
-        .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            animation: gridMove 20s linear infinite;
-        }
+    #damage-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      background: rgba(255,0,0,0);
+      z-index: 9;
+      transition: background 0.3s;
+    }
 
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-        }
-
-        h1 {
-            text-align: center;
-            color: #00ffff;
-            font-size: 3.5em;
-            margin-bottom: 60px;
-            text-shadow: 
-                0 0 10px #00ffff,
-                0 0 20px #00ffff,
-                0 0 30px #00ffff,
-                0 0 40px #0080ff;
-            animation: flicker 3s infinite alternate;
-            letter-spacing: 5px;
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-            75% { opacity: 0.9; }
-        }
-
-        /* Auth Screen Styles */
-        .auth-container {
-            max-width: 450px;
-            margin: 0 auto;
-            background: rgba(20, 20, 20, 0.9);
-            border: 2px solid #00ffff;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 
-                0 0 30px rgba(0, 255, 255, 0.4),
-                inset 0 0 20px rgba(0, 255, 255, 0.05);
-            animation: fadeIn 0.8s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .auth-title {
-            font-size: 2em;
-            color: #00ffff;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px #00ffff;
-            letter-spacing: 3px;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        .input-group label {
-            display: block;
-            color: #00ffff;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            text-shadow: 0 0 5px #00ffff;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #00ffff;
-            border-radius: 5px;
-            color: #fff;
-            font-size: 1em;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        .auth-button {
-            width: 100%;
-            background: transparent;
-            color: #00ffff;
-            border: 2px solid #00ffff;
-            padding: 15px;
-            font-size: 1.2em;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 5px #00ffff;
-            margin-bottom: 15px;
-        }
-
-        .auth-button:hover {
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 20px #00ffff;
-            text-shadow: none;
-        }
-
-        .auth-toggle {
-            text-align: center;
-            color: #aaa;
-            margin-top: 20px;
-        }
-
-        .auth-toggle a {
-            color: #00ffff;
-            text-decoration: none;
-            cursor: pointer;
-            text-shadow: 0 0 5px #00ffff;
-        }
-
-        .auth-toggle a:hover {
-            text-decoration: underline;
-        }
-
-        .delete-account-section {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .delete-account-btn {
-            background: transparent;
-            color: #ff4444;
-            border: 2px solid #ff4444;
-            padding: 10px 20px;
-            font-size: 0.9em;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 5px #ff4444;
-        }
-
-        .delete-account-btn:hover {
-            background: #ff4444;
-            color: #000;
-            box-shadow: 0 0 15px #ff4444;
-            text-shadow: none;
-        }
-
-        .warning-text {
-            color: #ff8888;
-            font-size: 0.85em;
-            margin-bottom: 10px;
-        }
-
-        .error-message {
-            background: rgba(255, 0, 0, 0.2);
-            border: 1px solid #ff0000;
-            color: #ff6666;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .success-message {
-            background: rgba(0, 255, 0, 0.2);
-            border: 1px solid #00ff00;
-            color: #66ff66;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .password-display {
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid #ffd700;
-            color: #ffd700;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.2em;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
-        }
-
-        .password-display .password-label {
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .password-display .password-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px #ffd700;
-        }
-
-        /* Admin Panel Styles */
-        .admin-panel {
-            background: rgba(20, 20, 20, 0.9);
-            border: 2px solid #ff00ff;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 40px;
-            box-shadow: 
-                0 0 30px rgba(255, 0, 255, 0.4),
-                inset 0 0 20px rgba(255, 0, 255, 0.05);
-        }
-
-        .admin-title {
-            color: #ff00ff;
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px #ff00ff;
-            text-align: center;
-        }
-
-        .whitelist-section {
-            margin-bottom: 20px;
-        }
-
-        .whitelist-section h3 {
-            color: #00ffff;
-            margin-bottom: 15px;
-            text-shadow: 0 0 5px #00ffff;
-        }
-
-        .whitelist-input {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .whitelist-input input {
-            flex: 1;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #00ffff;
-            border-radius: 5px;
-            color: #fff;
-            font-family: 'Courier New', monospace;
-        }
-
-        .whitelist-input button {
-            padding: 12px 25px;
-            background: transparent;
-            color: #00ff00;
-            border: 2px solid #00ff00;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s ease;
-        }
-
-        .whitelist-input button:hover {
-            background: #00ff00;
-            color: #000;
-            box-shadow: 0 0 15px #00ff00;
-        }
-
-        .whitelist-list {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #00ffff;
-            border-radius: 5px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .whitelist-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #00ffff;
-            border-radius: 3px;
-            margin-bottom: 8px;
-            color: #fff;
-        }
-
-        .remove-btn {
-            background: transparent;
-            color: #ff0000;
-            border: 1px solid #ff0000;
-            padding: 5px 15px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s ease;
-        }
-
-        .remove-btn:hover {
-            background: #ff0000;
-            color: #fff;
-        }
-
-        .logout-btn {
-            background: transparent;
-            color: #ff6666;
-            border: 2px solid #ff6666;
-            padding: 12px 30px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s ease;
-            display: block;
-            margin: 20px auto 0;
-        }
-
-        .logout-btn:hover {
-            background: #ff6666;
-            color: #000;
-            box-shadow: 0 0 15px #ff6666;
-        }
-
-        /* Password Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background: rgba(20, 20, 20, 0.95);
-            border: 2px solid #00ffff;
-            border-radius: 15px;
-            padding: 40px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
-        }
-
-        .modal-title {
-            font-size: 1.8em;
-            color: #00ffff;
-            text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px #00ffff;
-        }
-
-        /* Games Grid Styles */
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 20px;
-        }
-
-        .game-card {
-            background: rgba(20, 20, 20, 0.8);
-            border: 2px solid #00ffff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 
-                0 0 20px rgba(0, 255, 255, 0.3),
-                inset 0 0 20px rgba(0, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            animation: fadeInUp 0.8s ease forwards;
-        }
-
-        .game-card:nth-child(1) { animation-delay: 0.2s; }
-        .game-card:nth-child(2) { animation-delay: 0.4s; }
-        .game-card:nth-child(3) { animation-delay: 0.6s; }
-        .game-card:nth-child(4) { animation-delay: 0.8s; }
-        .game-card:nth-child(5) { animation-delay: 1.0s; }
-        .game-card:nth-child(6) { animation-delay: 1.2s; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 
-                0 0 40px rgba(0, 255, 255, 0.6),
-                inset 0 0 30px rgba(0, 255, 255, 0.1);
-        }
-
-        .game-title {
-            font-size: 1.8em;
-            color: #00ffff;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-shadow: 0 0 10px #00ffff;
-            letter-spacing: 2px;
-        }
-
-        .game-description {
-            color: #aaaaaa;
-            line-height: 1.6;
-            margin-bottom: 25px;
-            flex-grow: 1;
-            text-shadow: 0 0 5px rgba(170, 170, 170, 0.5);
-        }
-
-        .play-button {
-            background: transparent;
-            color: #00ffff;
-            border: 2px solid #00ffff;
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            text-align: center;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 5px #00ffff;
-        }
-
-        .play-button:hover {
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 20px #00ffff;
-            text-shadow: none;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-                letter-spacing: 3px;
-            }
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    /* Reload UI */
+    #reload-indicator {
+      position: absolute;
+      top: 40px;
+      left: 10px;
+      font-size: 14px;
+      color: #ff5;
+      text-shadow: 0 0 4px #f50;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body>
-    <div class="stars"></div>
-    <div class="grid-overlay"></div>
-    
-    <!-- Auth Screen -->
-    <div id="authScreen" class="container">
-        <h1>🎮 GORDON'S GAMES 🎮</h1>
-        <div class="auth-container">
-            <div class="auth-title" id="authTitle">LOGIN</div>
-            <div id="errorMessage"></div>
-            <div id="successMessage"></div>
-            <div id="passwordDisplay"></div>
-            
-            <form id="authForm">
-                <div class="input-group">
-                    <label for="username">USERNAME</label>
-                    <input type="text" id="username" autocomplete="off" required>
-                </div>
-                <div class="input-group" id="passwordGroup">
-                    <label for="password">PASSWORD</label>
-                    <input type="password" id="password" autocomplete="off" required>
-                </div>
-                <button type="submit" class="auth-button" id="authSubmit">ENTER</button>
-            </form>
-            
-            <div id="deleteAccountSection" class="delete-account-section hidden">
-                <div class="warning-text">⚠️ This device already has an account</div>
-                <button class="delete-account-btn" onclick="deleteAccount()">DELETE OLD ACCOUNT & CREATE NEW</button>
-            </div>
+  <div id="damage-overlay"></div>
+  <div id="coins-display">🪙 0</div>
+  <div id="leaderboard">
+    <div class="lb-title">🏆 LEADERBOARD</div>
+    <div id="lb-entries">Loading...</div>
+  </div>
+  <div id="reload-indicator">AMMO: 6/6</div>
 
-            <div class="auth-toggle">
-                <span id="toggleText">Don't have an account? <a id="toggleLink">Sign Up</a></span>
-            </div>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen">
+    <div class="screen-title">🔐 LOGIN</div>
+    <div class="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" class="form-control" maxlength="16" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" class="form-control" maxlength="32">
+      </div>
+      <button id="login-btn" class="btn">LOGIN</button>
+      <div class="switch-form" id="to-signup">🆕 Create Account</div>
+    </div>
+  </div>
+
+  <!-- Signup Screen -->
+  <div id="signup-screen" class="screen" style="display:none;">
+    <div class="screen-title">📝 SIGN UP</div>
+    <div class="signup-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="signup-username" class="form-control" maxlength="16" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" class="form-control" maxlength="32">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="signup-confirm" class="form-control" maxlength="32">
+      </div>
+      <button id="signup-btn" class="btn">CREATE ACCOUNT</button>
+      <div class="switch-form" id="to-login">⬅️ Back to Login</div>
+    </div>
+  </div>
+
+  <!-- Title Screen (after login) -->
+  <div id="title-screen" class="screen" style="display:none;">
+    <div class="screen-title">
+      <span>🪐 NEON SHOOTER</span>
+      <span>⚡ Welcome, <span id="current-user">—</span></span>
+    </div>
+    <button id="start-btn" class="btn">SELECT AVATAR</button>
+    <button id="logout-btn" class="btn" style="background:#555;">Logout</button>
+  </div>
+
+  <!-- Avatar Selection -->
+  <div id="avatar-screen" class="screen" style="display:none;">
+    <div class="screen-title">CHOOSE YOUR FIGHTER</div>
+    <div id="avatars">
+      <div class="avatar-card" data-avatar="phantom">
+        <div class="avatar-icon" style="background: radial-gradient(circle, #0af, #048);"></div>
+        <div class="avatar-name">PHANTOM</div>
+        <div class="avatar-desc">Stealth Assassin</div>
+        <div class="avatar-stats">HP: 80 | SPD: 6.5 | DMG: 30</div>
+        <div class="avatar-abilities">
+          <span class="key-hint">Q</span> Blink &nbsp; 
+          <span class="key-hint">E</span> Smoke Veil
         </div>
+        <div class="unlock-cost">🔓 Unlocked</div>
+      </div>
+
+      <div class="avatar-card locked" data-avatar="titan" data-cost="50">
+        <div class="avatar-icon" style="background: radial-gradient(circle, #f80, #840);"></div>
+        <div class="avatar-name">TITAN</div>
+        <div class="avatar-desc">Heavy Tank</div>
+        <div class="avatar-stats">HP: 180 | SPD: 3.0 | DMG: 40</div>
+        <div class="avatar-abilities">
+          <span class="key-hint">Q</span> Shockwave &nbsp; 
+          <span class="key-hint">E</span> Bulwark
+        </div>
+        <div class="unlock-cost">💰 50 Coins</div>
+      </div>
+
+      <div class="avatar-card locked" data-avatar="aegis" data-cost="80">
+        <div class="avatar-icon" style="background: radial-gradient(circle, #0f8, #064);"></div>
+        <div class="avatar-name">AEGIS</div>
+        <div class="avatar-desc">Tech Support</div>
+        <div class="avatar-stats">HP: 100 | SPD: 5.0 | DMG: 25</div>
+        <div class="avatar-abilities">
+          <span class="key-hint">Q</span> Drone Swarm &nbsp; 
+          <span class="key-hint">E</span> EMP Pulse
+        </div>
+        <div class="unlock-cost">💰 80 Coins</div>
+      </div>
+
+      <div class="avatar-card locked" data-avatar="vortex" data-cost="150">
+        <div class="avatar-icon" style="background: radial-gradient(circle, #f0f, #606);"></div>
+        <div class="avatar-name">VORTEX</div>
+        <div class="avatar-desc">Gravity Mage</div>
+        <div class="avatar-stats">HP: 90 | SPD: 5.5 | DMG: 35</div>
+        <div class="avatar-abilities">
+          <span class="key-hint">Q</span> Singularity &nbsp; 
+          <span class="key-hint">E</span> Time Warp
+        </div>
+        <div class="unlock-cost">💰 150 Coins</div>
+      </div>
+    </div>
+    <button id="confirm-avatar-btn" class="btn" disabled>CONFIRM SELECTION</button>
+  </div>
+
+  <!-- Game UI -->
+  <div id="game-screen">
+    <div id="ui">
+      <div>HEALTH: <span id="health">100</span></div>
+      <div>SCORE: <span id="score">0</span></div>
+      <div>WAVE: <span id="wave">1</span></div>
+      <div>ENEMIES: <span id="enemy-count">0</span></div>
     </div>
 
-    <!-- Password Modal -->
-    <div id="passwordModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-title">🔐 ENTER SECRET PASSWORD</div>
-            <div id="modalError"></div>
-            <form id="passwordForm">
-                <div class="input-group">
-                    <label for="gamePassword">SECRET PASSWORD</label>
-                    <input type="password" id="gamePassword" autocomplete="off" required>
-                </div>
-                <button type="submit" class="auth-button">UNLOCK GAME</button>
-                <button type="button" class="auth-button" style="background: rgba(255, 0, 0, 0.2); border-color: #ff6666; color: #ff6666;" onclick="closePasswordModal()">CANCEL</button>
-            </form>
-        </div>
+    <div id="radar">
+      <canvas id="radar-canvas" width="150" height="150"></canvas>
     </div>
 
-    <!-- Main Content (Games + Admin Panel) -->
-    <div id="mainContent" class="container hidden">
-        <h1>🎮 GORDON'S GAMES 🎮</h1>
-        
-        <!-- Admin Panel -->
-        <div id="adminPanel" class="admin-panel hidden">
-            <div class="admin-title">🔐 ADMIN CONTROL PANEL 🔐</div>
-            <div class="whitelist-section">
-                <h3>Whitelist Management</h3>
-                <div class="whitelist-input">
-                    <input type="text" id="whitelistUsername" placeholder="Enter username to whitelist">
-                    <button onclick="addToWhitelist()">ADD USER</button>
-                </div>
-                <div class="whitelist-list" id="whitelistList"></div>
-            </div>
-        </div>
-
-        <div class="games-grid">
-            <div class="game-card">
-                <div class="game-title">SANS FIGHT</div>
-                <div class="game-description">
-                    Face off against one of gaming's most iconic characters. Dodge intricate attack patterns, time your moves perfectly, and survive the legendary Sans encounter.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Sans_Fight/')">PLAY NOW</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title">TOWER DEFENCE</div>
-                <div class="game-description">
-                    Strategically place towers and defend your base against waves of relentless enemies. Upgrade your defenses and adapt your strategy as the challenge intensifies.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Tower_Defence-V1/')">PLAY NOW</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title">SUPER MARIO</div>
-                <div class="game-description">
-                    Jump, run, and stomp through classic platforming levels! Move with Arrow Keys or WASD, jump with Space/W/↑, fire with K (configurable), and restart with R.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Super_Mario/')">PLAY NOW</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title">GORDON'S<br>SMART BRAIN</div>
-                <div class="game-description">
-                    Your ultimate AI assistant—generate images, search the web, analyze data, write & debug code, summarize documents, translate languages, and more.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/Gordon_s_Smart_Brain/')">PLAY NOW</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title">SECRET</div>
-                <div class="game-description">
-                    Enter the shadows and uncover what lies beyond the veil. This cryptic experience challenges perception and defies explanation. Only the brave will discover its true nature.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/secret/')">PLAY NOW</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title">MYSTERY GAME</div>
-                <div class="game-description">
-                    Embark on an enigmatic adventure where every click reveals new surprises. Discover hidden secrets and test your skills in this mysterious experience.
-                </div>
-                <button class="play-button" onclick="requestGameAccess('https://yanxuangordon-code.github.io/-_-/')">PLAY NOW</button>
-            </div>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">LOGOUT</button>
+    <div id="abilities">
+      <div class="ability-key" id="q-key">
+        <div class="key-label">Q</div>
+        <div class="cooldown-mask" id="q-cooldown"></div>
+        <div class="cooldown-text" id="q-text">Ready</div>
+      </div>
+      <div class="ability-key" id="e-key">
+        <div class="key-label">E</div>
+        <div class="cooldown-mask" id="e-cooldown"></div>
+        <div class="cooldown-text" id="e-text">Ready</div>
+      </div>
     </div>
 
-    <script>
-        // Generate stars
-        const starsContainer = document.querySelector('.stars');
-        for (let i = 0; i < 100; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            starsContainer.appendChild(star);
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Game Over -->
+  <div id="game-over-screen" class="screen" style="display:none;">
+    <div class="screen-title" style="color:#f55;">💥 GAME OVER</div>
+    <div style="font-size:28px; margin:20px 0;">Final Score: <span id="final-score">0</span></div>
+    <div style="font-size:18px; margin-bottom:10px;">Coins Earned: <span id="coins-earned">0</span></div>
+    <div style="font-size:18px; margin-bottom:20px;">Avatar: <span id="final-avatar">—</span></div>
+    <button id="retry-btn" class="btn">RETRY</button>
+    <button id="back-to-avatars-btn" class="btn" style="background:#55f;">AVATAR SELECT</button>
+  </div>
+
+  <!-- SHA-256 for password hashing (client-side only) -->
+  <script>
+    // 🔐 SHA-256 (public domain)
+    const sha256 = async (message) => {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // ===== DOM ELEMENTS =====
+      const canvas = document.getElementById('game-canvas');
+      const radarCanvas = document.getElementById('radar-canvas');
+      const ctx = canvas.getContext('2d');
+      const radarCtx = radarCanvas.getContext('2d');
+      const damageOverlay = document.getElementById('damage-overlay');
+      const coinsDisplay = document.getElementById('coins-display');
+      const lbEntries = document.getElementById('lb-entries');
+      const reloadIndicator = document.getElementById('reload-indicator');
+
+      if (!ctx || !radarCtx) {
+        alert('Canvas not supported!');
+        return;
+      }
+
+      // ===== LOGIN & DATA =====
+      let currentUser = null;
+      let playerData = { coins: 0, unlockedAvatars: ['phantom'] };
+
+      let users = {};
+      let leaderboard = [];
+      try {
+        users = JSON.parse(localStorage.getItem('neonShooterUsers')) || {};
+        leaderboard = JSON.parse(localStorage.getItem('neonShooterLeaderboard')) || [];
+      } catch (e) {
+        console.warn('localStorage access failed, using defaults');
+        users = {};
+        leaderboard = [];
+      }
+
+      function saveUsers() { 
+        try { localStorage.setItem('neonShooterUsers', JSON.stringify(users)); } 
+        catch (e) { console.error('Failed to save users:', e); } 
+      }
+      function saveLeaderboard() { 
+        try { localStorage.setItem('neonShooterLeaderboard', JSON.stringify(leaderboard)); } 
+        catch (e) { console.error('Failed to save leaderboard:', e); } 
+      }
+
+      function updateLeaderboard() {
+        lbEntries.innerHTML = leaderboard.length ? '' : 'No scores yet';
+        const seen = new Set();
+        const topEntries = [];
+        for (const entry of leaderboard) {
+          if (!seen.has(entry.name)) {
+            seen.add(entry.name);
+            topEntries.push(entry);
+            if (topEntries.length >= 5) break;
+          }
         }
+        topEntries.forEach((entry, i) => {
+          const div = document.createElement('div');
+          div.className = 'lb-entry';
+          div.innerHTML = `
+            <span class="lb-rank">${i + 1}.</span>
+            <span class="lb-name">${entry.name}</span>
+            <span class="lb-score">${entry.score}</span>
+          `;
+          lbEntries.appendChild(div);
+        });
+      }
+      updateLeaderboard();
 
-        // Auth System
-        let isLoginMode = true;
-        const ADMIN_PASSWORD = 'hacker67';
-        let pendingGameUrl = null;
-        
-        // Device ID generation
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now();
-                localStorage.setItem('deviceId', deviceId);
+      // ===== AUTH WITH ERROR HANDLING =====
+      async function hashPassword(password, usernameForSalt) {
+        const salt = usernameForSalt || currentUser || 'guest';
+        return await sha256(salt + '|' + password + '|neon-salt-2026');
+      }
+
+      // ✅ FIXED: Attach listeners safely
+      function attachAuthListeners() {
+        // Login
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+          loginBtn.addEventListener('click', async () => {
+            const btn = document.getElementById('login-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Logging in...';
+            btn.disabled = true;
+
+            try {
+              const usernameEl = document.getElementById('login-username');
+              const passwordEl = document.getElementById('login-password');
+              if (!usernameEl || !passwordEl) {
+                alert('Form elements not found');
+                return;
+              }
+              const username = usernameEl.value.trim();
+              const password = passwordEl.value;
+
+              if (!username) {
+                alert('Username cannot be empty');
+                return;
+              }
+              if (!password) {
+                alert('Password cannot be empty');
+                return;
+              }
+
+              if (!users[username]) {
+                alert('User not found');
+                return;
+              }
+
+              const expected = users[username].hash;
+              const actual = await hashPassword(password, username);
+
+              if (actual !== expected) {
+                alert('Incorrect password');
+                return;
+              }
+
+              currentUser = username;
+              playerData = users[username];
+              document.getElementById('current-user').textContent = username;
+              coinsDisplay.textContent = `🪙 ${playerData.coins}`;
+              document.getElementById('login-screen').style.display = 'none';
+              document.getElementById('title-screen').style.display = 'flex';
+            } catch (e) {
+              console.error('Login error:', e);
+              alert('Login failed. Please try again.');
+            } finally {
+              if (btn) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+              }
             }
-            return deviceId;
+          });
         }
 
-        // Generate random password
-        function generatePassword() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-            let password = '';
-            for (let i = 0; i < 8; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
+        // Signup
+        const signupBtn = document.getElementById('signup-btn');
+        if (signupBtn) {
+          signupBtn.addEventListener('click', async () => {
+            const btn = document.getElementById('signup-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Creating...';
+            btn.disabled = true;
+
+            try {
+              const usernameEl = document.getElementById('signup-username');
+              const pass1El = document.getElementById('signup-password');
+              const pass2El = document.getElementById('signup-confirm');
+              if (!usernameEl || !pass1El || !pass2El) {
+                alert('Form elements not found');
+                return;
+              }
+              const username = usernameEl.value.trim();
+              const pass1 = pass1El.value;
+              const pass2 = pass2El.value;
+
+              if (!username) {
+                alert('Username required');
+                return;
+              }
+              if (username.length < 3) {
+                alert('Username must be ≥3 chars');
+                return;
+              }
+              if (pass1.length < 4) {
+                alert('Password must be ≥4 chars');
+                return;
+              }
+              if (pass1 !== pass2) {
+                alert('Passwords do not match');
+                return;
+              }
+              if (users[username]) {
+                alert('Username already taken');
+                return;
+              }
+
+              const hashed = await hashPassword(pass1, username);
+              users[username] = { hash: hashed, coins: 0, unlockedAvatars: ['phantom'] };
+              saveUsers();
+              alert('Account created! You can now log in.');
+              document.getElementById('signup-screen').style.display = 'none';
+              document.getElementById('login-screen').style.display = 'flex';
+            } catch (e) {
+              console.error('Signup error:', e);
+              alert('Signup failed. Please try again.');
+            } finally {
+              if (btn) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+              }
             }
-            return password;
+          });
         }
 
-        // User data management
-        function getUserData(username) {
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            return users[username.toLowerCase()];
+        // Navigation
+        const toSignup = document.getElementById('to-signup');
+        if (toSignup) {
+          toSignup.addEventListener('click', () => {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('signup-screen').style.display = 'flex';
+          });
+        }
+        const toLogin = document.getElementById('to-login');
+        if (toLogin) {
+          toLogin.addEventListener('click', () => {
+            document.getElementById('signup-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+          });
+        }
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', () => {
+            currentUser = null;
+            playerData = { coins: 0, unlockedAvatars: ['phantom'] };
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+          });
+        }
+      }
+
+      // Attach immediately
+      attachAuthListeners();
+
+      // ===== CONFIG & AVATARS =====
+      const CONFIG = {
+        SCREEN_WIDTH: window.innerWidth,
+        SCREEN_HEIGHT: window.innerHeight,
+        PLAYER_SIZE: 20,
+        BULLET_SPEED: 12,
+        BULLET_SIZE: 4,
+        ENEMY_SPAWN_BASE: 2000,
+        ENEMY_BASE_SPEED: 1.2,
+        ENEMY_HP_BASE: 50,
+        COIN_SPAWN_CHANCE: 0.65,
+        COIN_VALUE: 5,
+        DAMAGE_OVERLAY_MAX: 0.4,
+        DAMAGE_OVERLAY_FADE: 30,
+        ENEMY_MIN_SPACING: 80,
+        ENEMY_SEPARATION_FORCE: 0.8,
+        BOSS_SPAWN_KILLS: 20, // ✅ Boss after 20 kills
+      };
+
+      const AVATARS = {
+        phantom: { name: "Phantom", unlocked: true, cost: 0, color: '#0af', trailColor: '#0af8', particleColor: '#0af', health: 80, speed: 6.5, bulletDamage: 30, shootCooldown: 120, magazineSize: 4, reloadTime: 800, abilities: { q: { name: "Blink", cooldown: 1500 }, e: { name: "Smoke Veil", cooldown: 8000, duration: 2000 } } },
+        titan: { name: "Titan", unlocked: false, cost: 50, color: '#f80', trailColor: '#f80b', particleColor: '#f84', health: 180, speed: 3.0, bulletDamage: 40, shootCooldown: 250, magazineSize: 8, reloadTime: 1500, abilities: { q: { name: "Shockwave", cooldown: 3000 }, e: { name: "Bulwark", cooldown: 10000, duration: 4000 } } },
+        aegis: { name: "Aegis", unlocked: false, cost: 80, color: '#0f8', trailColor: '#0f8a', particleColor: '#0f8', health: 100, speed: 5.0, bulletDamage: 25, shootCooldown: 100, magazineSize: 10, reloadTime: 1000, abilities: { q: { name: "Drone Swarm", cooldown: 12000, duration: 15000 }, e: { name: "EMP Pulse", cooldown: 7000, radius: 200 } } },
+        vortex: { name: "Vortex", unlocked: false, cost: 150, color: '#f0f', trailColor: '#f0fb', particleColor: '#f0f', health: 90, speed: 5.5, bulletDamage: 35, shootCooldown: 140, magazineSize: 6, reloadTime: 1200, abilities: { q: { name: "Singularity", cooldown: 10000, duration: 4000 }, e: { name: "Time Warp", cooldown: 15000, duration: 3000 } } }
+      };
+
+      function syncAvatars() {
+        Object.keys(AVATARS).forEach(key => {
+          AVATARS[key].unlocked = playerData.unlockedAvatars.includes(key);
+        });
+      }
+
+      function updateAvatarUI() {
+        let selected = null;
+        document.querySelectorAll('.avatar-card').forEach(card => {
+          const key = card.dataset.avatar;
+          const avatar = AVATARS[key];
+          if (avatar.unlocked) {
+            card.classList.remove('locked');
+            card.querySelector('.unlock-cost').textContent = '🔓 Unlocked';
+            if (card.classList.contains('selected')) {
+              selected = key;
+            }
+          } else {
+            card.classList.add('locked');
+            card.querySelector('.unlock-cost').textContent = `💰 ${avatar.cost} Coins`;
+          }
+        });
+
+        const confirmBtn = document.getElementById('confirm-avatar-btn');
+        confirmBtn.disabled = !selected;
+
+        if (!selected) {
+          alert("Please select an avatar first.");
+        }
+      }
+
+      // ===== STATE =====
+      const state = {
+        screen: 'login',
+        selectedAvatar: null,
+        running: false,
+        gameOver: false,
+        score: 0,
+        wave: 1,
+        enemyCount: 0,
+        enemiesKilled: 0,
+        coins: 0,
+        keys: {},
+        mouseX: 0,
+        mouseY: 0,
+        lastShot: 0,
+        screenShake: { x: 0, y: 0, time: 0, intensity: 0 },
+        damageOverlayAlpha: 0,
+        particles: [],
+        bullets: [],
+        enemies: [],
+        coinsOnMap: [],
+        drones: [],
+        singularities: [],
+        bosses: [],
+        player: null,
+        ctx, radarCtx,
+        bossActive: false,
+        gameStartTime: 0,
+        // ✅ NEW: Track wave state
+        lastSpawnTime: 0,
+        waveStarted: false,
+      };
+
+      function resizeCanvas() {
+        CONFIG.SCREEN_WIDTH = window.innerWidth;
+        CONFIG.SCREEN_HEIGHT = window.innerHeight;
+        canvas.width = CONFIG.SCREEN_WIDTH;
+        canvas.height = CONFIG.SCREEN_HEIGHT;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // ===== Utils =====
+      const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+      const angle = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1);
+      const rand = (min, max) => Math.random() * (max - min) + min;
+      const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+      const lerp = (a, b, t) => a + (b - a) * t;
+
+      // ===== Enemy Types =====
+      const ENEMY_TYPES = {
+        grunt: { 
+          name: "Grunt", 
+          baseHP: 50, 
+          speed: 1.2, 
+          radius: 12, 
+          color: '#f00', 
+          damage: 10,
+          points: 10,
+          coinChance: 0.65
+        },
+        brute: { 
+          name: "Brute", 
+          baseHP: 150, 
+          speed: 0.7, 
+          radius: 20, 
+          color: '#800', 
+          damage: 15,
+          points: 25,
+          coinChance: 0.8
+        },
+        striker: { 
+          name: "Striker", 
+          baseHP: 30, 
+          speed: 2.0, 
+          radius: 10, 
+          color: '#0f0', 
+          damage: 8,
+          points: 15,
+          coinChance: 0.5
+        },
+        bomber: { 
+          name: "Bomber", 
+          baseHP: 60, 
+          speed: 1.0, 
+          radius: 15, 
+          color: '#f80', 
+          damage: 12,
+          points: 20,
+          coinChance: 0.7,
+          explodes: true
+        },
+        sniper: { 
+          name: "Sniper", 
+          baseHP: 70, 
+          speed: 0.9, 
+          radius: 14, 
+          color: '#08f', 
+          damage: 18,
+          points: 30,
+          coinChance: 0.75,
+          beamRange: 300,
+          beamCooldown: 3000,
+          lastBeam: 0
+        },
+        swarm: { 
+          name: "Swarm", 
+          baseHP: 40, 
+          speed: 1.5, 
+          radius: 11, 
+          color: '#f0f', 
+          damage: 9,
+          points: 12,
+          coinChance: 0.6,
+          splits: true
+        }
+      };
+
+      // ===== Abilities (same) =====
+      function blink(player) { 
+        const maxDist = 200;
+        const dx = state.mouseX - player.x;
+        const dy = state.mouseY - player.y;
+        const d = dist(0, 0, dx, dy);
+        if (d === 0) return;
+        const nx = dx / d;
+        const ny = dy / d;
+        player.x += nx * Math.min(d, maxDist);
+        player.y += ny * Math.min(d, maxDist);
+        for (let i = 0; i < 20; i++) addParticle(player.x - nx * 30, player.y - ny * 30, -nx * rand(3,8) + rand(-1,1), -ny * rand(3,8) + rand(-1,1), '#0af');
+        shakeScreen(7, 100);
+      }
+
+      function smokeVeil(player) {
+        player.invincible = true;
+        player.invincibleUntil = Date.now() + 2000;
+        for (let i = 0; i < 30; i++) {
+          const a = rand(0, Math.PI * 2);
+          addParticle(player.x, player.y, Math.cos(a) * rand(2,5), Math.sin(a) * rand(2,5), 'rgba(220,220,255,0.7)');
+        }
+      }
+
+      function shockwave(player) {
+        const radius = 120;
+        state.enemies.forEach(e => {
+          const d = dist(player.x, player.y, e.x, e.y);
+          if (d < radius) {
+            const force = 8 * (1 - d / radius);
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
+            const len = Math.hypot(dx, dy) || 1;
+            e.x += (dx / len) * force;
+            e.y += (dy / len) * force;
+          }
+        });
+        for (let i = 0; i < 25; i++) {
+          const a = rand(0, Math.PI * 2);
+          addParticle(player.x + Math.cos(a) * 20, player.y + Math.sin(a) * 20, Math.cos(a) * rand(4,7), Math.sin(a) * rand(4,7), '#f84');
+        }
+        shakeScreen(12, 250);
+      }
+
+      function bulwark(player) {
+        player.damageReduction = 0.7;
+        player.damageReductionUntil = Date.now() + 4000;
+        for (let i = 0; i < 15; i++) {
+          const a = rand(0, Math.PI * 2);
+          addParticle(player.x + Math.cos(a) * (player.radius + 5), player.y + Math.sin(a) * (player.radius + 5), 0, 0, '#fff');
+        }
+      }
+
+      function droneSwarm(player) {
+        for (let i = 0; i < 3; i++) {
+          state.drones.push({ x: player.x, y: player.y, angle: (i / 3) * Math.PI * 2, radius: 60, lastShot: 0, shootCooldown: 400 });
+        }
+        shakeScreen(4, 80);
+      }
+
+      function empPulse(player) {
+        state.enemies.forEach(e => {
+          if (dist(player.x, player.y, e.x, e.y) < 200) {
+            e.stunned = true;
+            e.stunUntil = Date.now() + 1500;
+            addParticle(e.x, e.y, 0, 0, '#0ff', 25);
+          }
+        });
+        for (let i = 0; i < 40; i++) {
+          const a = rand(0, Math.PI * 2);
+          addParticle(player.x, player.y, Math.cos(a) * 3, Math.sin(a) * 3, '#0ff');
+        }
+      }
+
+      function singularity(player) {
+        state.singularities.push({ x: state.mouseX, y: state.mouseY, radius: 5, maxRadius: 80, duration: 4000, endTime: Date.now() + 4000 });
+        addParticle(state.mouseX, state.mouseY, 0, 0, '#000', 40);
+        shakeScreen(6, 120);
+      }
+
+      function timeWarp(player) {
+        state.timeWarpActive = true;
+        state.timeWarpUntil = Date.now() + 3000;
+        for (let i = 0; i < 50; i++) {
+          const a = rand(0, Math.PI * 2);
+          addParticle(player.x, player.y, Math.cos(a) * rand(1,3), Math.sin(a) * rand(1,3), '#88f');
+        }
+      }
+
+      function addParticle(x, y, vx, vy, color, life = 30) {
+        state.particles.push({ x, y, vx, vy, color, life, maxLife: life, radius: rand(1, 3) });
+      }
+
+      function shakeScreen(intensity, duration) {
+        state.screenShake = { x: 0, y: 0, time: duration, intensity };
+      }
+
+      function useAbility(key) {
+        if (!state.player) return;
+        const ability = state.player.avatar.abilities[key];
+        if (!ability || (state.player.cooldowns && state.player.cooldowns[key] > 0)) {
+          return;
         }
 
-        function saveUserData(username, data) {
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            users[username.toLowerCase()] = data;
-            localStorage.setItem('users', JSON.stringify(users));
+        for (let i = 0; i < 12; i++) {
+          addParticle(
+            state.player.x + rand(-15, 15),
+            state.player.y + rand(-15, 15),
+            rand(-3, 3),
+            rand(-3, 3),
+            '#0ff'
+          );
         }
 
-        // Check if user is registered on this device
-        function isUserRegistered() {
-            return localStorage.getItem('registeredUser') !== null;
+        switch (ability.name) {
+          case "Blink": blink(state.player); break;
+          case "Smoke Veil": smokeVeil(state.player); break;
+          case "Shockwave": shockwave(state.player); break;
+          case "Bulwark": bulwark(state.player); break;
+          case "Drone Swarm": droneSwarm(state.player); break;
+          case "EMP Pulse": empPulse(state.player); break;
+          case "Singularity": singularity(state.player); break;
+          case "Time Warp": timeWarp(state.player); break;
         }
 
-        // Get registered username
-        function getRegisteredUser() {
-            return localStorage.getItem('registeredUser');
+        if (!state.player.cooldowns) {
+          state.player.cooldowns = { q: 0, e: 0 };
+        }
+        state.player.cooldowns[key] = ability.cooldown;
+      }
+
+      // ===== Input =====
+      window.addEventListener('keydown', e => {
+        state.keys[e.key.toLowerCase()] = true;
+        if (state.screen === 'game' && state.player) {
+          if (e.key.toLowerCase() === 'q') useAbility('q');
+          if (e.key.toLowerCase() === 'e') useAbility('e');
+          if (e.key.toLowerCase() === 'r' && state.player.ammo === 0 && !state.player.reloading) {
+            reloadWeapon();
+          }
+        }
+      });
+      window.addEventListener('keyup', e => state.keys[e.key.toLowerCase()] = false);
+
+      canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        state.mouseX = e.clientX - rect.left;
+        state.mouseY = e.clientY - rect.top;
+      });
+
+      canvas.addEventListener('mousedown', () => {
+        if (state.screen === 'game') {
+          if (state.player && state.player.ammo > 0) {
+            shoot();
+          } else if (!state.player.reloading) {
+            reloadWeapon();
+          }
+        }
+      });
+
+      // ✅ FIXED SHOOT FUNCTION
+      function shoot() {
+        if (!state.player || state.player.reloading || state.player.ammo <= 0) return;
+        if (Date.now() - state.lastShot < state.player.shootCooldown) return;
+
+        state.lastShot = Date.now();
+        state.player.ammo--;
+
+        const dx = state.mouseX - state.player.x;
+        const dy = state.mouseY - state.player.y;
+        const d = dist(0, 0, dx, dy);
+        if (d === 0) return;
+
+        const vx = (dx / d) * CONFIG.BULLET_SPEED;
+        const vy = (dy / d) * CONFIG.BULLET_SPEED;
+
+        state.bullets.push({
+          x: state.player.x,
+          y: state.player.y,
+          vx, vy,
+          radius: CONFIG.BULLET_SIZE,
+          damage: state.player.bulletDamage,
+          color: state.player.color
+        });
+        shakeScreen(3, 100);
+
+        for (let i = 0; i < 5; i++) {
+          const a = angle(state.player.x, state.player.y, state.mouseX, state.mouseY) + rand(-0.4, 0.4);
+          addParticle(
+            state.player.x + vx * 0.3,
+            state.player.y + vy * 0.3,
+            Math.cos(a) * rand(2,5),
+            Math.sin(a) * rand(2,5),
+            state.player.color
+          );
         }
 
-        // Register user on this device
-        function registerUser(username, password) {
-            localStorage.setItem('registeredUser', username);
-            localStorage.setItem('registrationDate', new Date().toISOString());
-            const deviceId = getDeviceId();
-            saveUserData(username, {
-                password: password,
-                deviceId: deviceId,
-                createdAt: new Date().toISOString()
+        if (state.player.ammo === 0) {
+          reloadWeapon();
+        } else {
+          updateReloadDisplay();
+        }
+      }
+
+      function reloadWeapon() {
+        if (!state.player || state.player.ammo === state.player.magazineSize || state.player.reloading) return;
+        state.player.reloading = true;
+        state.player.reloadStart = Date.now();
+        reloadIndicator.textContent = "RELOADING…";
+      }
+
+      function updateReloadDisplay() {
+        if (!state.player) return;
+        reloadIndicator.textContent = `AMMO: ${state.player.ammo}/${state.player.magazineSize}`;
+      }
+
+      // Spawn with spacing
+      function isPositionValid(x, y, radius) {
+        for (const e of state.enemies) {
+          if (dist(x, y, e.x, e.y) < CONFIG.ENEMY_MIN_SPACING + e.radius + radius) {
+            return false;
+          }
+        }
+        if (state.player && dist(x, y, state.player.x, state.player.y) < 150) {
+          return false;
+        }
+        return true;
+      }
+
+      function spawnEnemy() {
+        let x, y, attempts = 0;
+        const maxAttempts = 20;
+        let valid = false;
+
+        while (!valid && attempts < maxAttempts) {
+          const side = Math.floor(rand(0, 4));
+          switch (side) {
+            case 0: x = rand(0, CONFIG.SCREEN_WIDTH); y = -30; break;
+            case 1: x = CONFIG.SCREEN_WIDTH + 30; y = rand(0, CONFIG.SCREEN_HEIGHT); break;
+            case 2: x = rand(0, CONFIG.SCREEN_WIDTH); y = CONFIG.SCREEN_HEIGHT + 30; break;
+            case 3: x = -30; y = rand(0, CONFIG.SCREEN_HEIGHT); break;
+          }
+
+          // Choose enemy type based on wave
+          const wave = state.wave;
+          let type;
+          if (wave < 3) {
+            type = 'grunt';
+          } else if (wave < 6) {
+            type = rand(0, 1) < 0.7 ? 'grunt' : 'striker';
+          } else if (wave < 10) {
+            type = rand(0, 1) < 0.5 ? 'grunt' : rand(0, 1) < 0.5 ? 'brute' : 'striker';
+          } else {
+            const types = ['grunt', 'brute', 'striker', 'bomber', 'sniper', 'swarm'];
+            type = types[Math.floor(rand(0, types.length))];
+          }
+
+          const radius = ENEMY_TYPES[type].radius + Math.min(5, wave * 0.3);
+          if (isPositionValid(x, y, radius)) {
+            valid = true;
+          }
+          attempts++;
+        }
+
+        if (!valid) {
+          const side = Math.floor(rand(0, 4));
+          switch (side) {
+            case 0: x = rand(0, CONFIG.SCREEN_WIDTH); y = -30; break;
+            case 1: x = CONFIG.SCREEN_WIDTH + 30; y = rand(0, CONFIG.SCREEN_HEIGHT); break;
+            case 2: x = rand(0, CONFIG.SCREEN_WIDTH); y = CONFIG.SCREEN_HEIGHT + 30; break;
+            case 3: x = -30; y = rand(0, CONFIG.SCREEN_HEIGHT); break;
+          }
+          const types = ['grunt', 'brute', 'striker'];
+          const type = types[Math.floor(rand(0, types.length))];
+        }
+
+        const typeData = ENEMY_TYPES[type];
+        const hp = typeData.baseHP * (1 + state.wave * 0.25);
+        const speed = typeData.speed * (1 + state.wave * 0.12);
+        const radius = typeData.radius + Math.min(5, state.wave * 0.3);
+        const damage = typeData.damage + Math.floor(state.wave * 0.2);
+
+        state.enemies.push({
+          x, y, radius,
+          speed, maxHealth: hp, health: hp,
+          color: typeData.color,
+          vx: 0, vy: 0, damageCooldown: 0,
+          stunned: false, stunUntil: 0,
+          damage: damage,
+          type: type,
+          points: typeData.points,
+          coinChance: typeData.coinChance,
+          // Sniper-specific
+          lastBeam: 0,
+          beamCooldown: typeData.beamCooldown || 0,
+          beamRange: typeData.beamRange || 0,
+          // Bomber/Swarm flags
+          explodes: !!typeData.explodes,
+          splits: !!typeData.splits
+        });
+        state.enemyCount++;
+        document.getElementById('enemy-count').textContent = state.enemyCount;
+      }
+
+      function spawnBoss() {
+        state.bosses.push(new Boss('devourer', state.wave));
+        state.bossActive = true;
+        // ✅ Reset kill counter after boss spawn
+        state.enemiesKilled = 0;
+      }
+
+      function spawnCoin(x, y) {
+        if (Math.random() < CONFIG.COIN_SPAWN_CHANCE) {
+          state.coinsOnMap.push({
+            x: x + rand(-20, 20),
+            y: y + rand(-20, 20),
+            radius: 8,
+            vy: -2,
+            life: 300,
+            collected: false
+          });
+        }
+      }
+
+      function separateEnemies() {
+        for (let i = 0; i < state.enemies.length; i++) {
+          const e1 = state.enemies[i];
+          for (let j = i + 1; j < state.enemies.length; j++) {
+            const e2 = state.enemies[j];
+            const d = dist(e1.x, e1.y, e2.x, e2.y);
+            const minDist = e1.radius + e2.radius + 10;
+            if (d < minDist && d > 0) {
+              const overlap = minDist - d;
+              const dx = e1.x - e2.x;
+              const dy = e1.y - e2.y;
+              const len = d;
+              const nx = dx / len;
+              const ny = dy / len;
+
+              e1.x += nx * overlap * 0.5 * CONFIG.ENEMY_SEPARATION_FORCE;
+              e1.y += ny * overlap * 0.5 * CONFIG.ENEMY_SEPARATION_FORCE;
+              e2.x -= nx * overlap * 0.5 * CONFIG.ENEMY_SEPARATION_FORCE;
+              e2.y -= ny * overlap * 0.5 * CONFIG.ENEMY_SEPARATION_FORCE;
+            }
+          }
+        }
+      }
+
+      // ===== BOSS — CHASES PLAYER =====
+      class Boss {
+        constructor(type, wave) {
+          this.type = type;
+          this.x = CONFIG.SCREEN_WIDTH / 2;
+          this.y = -100;
+          this.radius = 60 + wave * 5;
+          this.maxHealth = 800 + wave * 300;
+          this.health = this.maxHealth;
+          this.speed = 0.8;
+          this.phase = 1;
+          this.phaseThreshold = this.maxHealth * 0.6;
+          this.lastAttack = 0;
+          this.attackCooldown = 2000;
+          this.color = '#f00';
+          this.tentacles = [];
+          this.minions = [];
+          this.beamActive = false;
+          this.beamTarget = { x: 0, y: 0 };
+          this.beamStart = 0;
+          this.chaseSpeed = 1.2;
+        }
+
+        update() {
+          if (state.player) {
+            const dx = state.player.x - this.x;
+            const dy = state.player.y - this.y;
+            const d = dist(this.x, this.y, state.player.x, state.player.y);
+            if (d > 0) {
+              this.vx = (dx / d) * this.chaseSpeed;
+              this.vy = (dy / d) * this.chaseSpeed;
+            }
+            this.x += this.vx;
+            this.y += this.vy;
+          }
+
+          if (this.y < 150) return;
+
+          if (this.phase === 1 && this.health <= this.phaseThreshold) {
+            this.phase = 2;
+            for (let i = 0; i < 6; i++) {
+              this.tentacles.push({
+                angle: (i / 6) * Math.PI * 2,
+                length: 0,
+                maxLength: 150 + state.wave * 10,
+                speed: 2
+              });
+            }
+          }
+
+          const now = Date.now();
+          if (now - this.lastAttack > this.attackCooldown) {
+            this.lastAttack = now;
+
+            if (this.phase === 1) {
+              for (let i = 0; i < 2 + Math.floor(state.wave / 5); i++) {
+                this.minions.push({
+                  x: this.x + rand(-100, 100),
+                  y: this.y + 50,
+                  radius: 10,
+                  health: 30 + state.wave * 5,
+                  speed: 1.5 + state.wave * 0.1,
+                  color: '#f88'
+                });
+              }
+            } else if (this.phase === 2) {
+              if (!this.beamActive) {
+                this.beamActive = true;
+                this.beamTarget = { x: state.player.x, y: state.player.y };
+                this.beamStart = Date.now();
+                shakeScreen(10, 300);
+              }
+            }
+          }
+
+          this.tentacles.forEach(t => {
+            t.length = Math.min(t.length + t.speed, t.maxLength);
+          });
+
+          if (this.beamActive && Date.now() - this.beamStart > 1500) {
+            this.beamActive = false;
+          }
+
+          this.minions.forEach(m => {
+            const dx = state.player.x - m.x;
+            const dy = state.player.y - m.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 0) {
+              m.x += (dx / d) * m.speed;
+              m.y += (dy / d) * m.speed;
+            }
+            if (dist(m.x, m.y, state.player.x, state.player.y) < m.radius + state.player.radius) {
+              if (!state.player.invincible) {
+                state.player.health -= 8;
+                shakeScreen(5, 150);
+              }
+              m.health = 0;
+            }
+          });
+
+          for (let i = this.minions.length - 1; i >= 0; i--) {
+            if (this.minions[i].health <= 0) {
+              state.score += 15;
+              state.coinsOnMap.push({
+                x: this.minions[i].x,
+                y: this.minions[i].y,
+                radius: 8,
+                vy: -2,
+                life: 300,
+                collected: false
+              });
+              this.minions.splice(i, 1);
+            }
+          }
+        }
+
+        takeDamage(dmg) {
+          this.health -= dmg;
+          for (let i = 0; i < 15; i++) {
+            addParticle(this.x + rand(-this.radius, this.radius), this.y + rand(-this.radius, this.radius), rand(-4,4), rand(-4,4), this.color);
+          }
+        }
+
+        draw(ctx) {
+          const barWidth = 300;
+          ctx.fillStyle = '#300';
+          ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 30, barWidth, 10);
+          const hpPct = this.health / this.maxHealth;
+          ctx.fillStyle = hpPct > 0.5 ? '#0f0' : hpPct > 0.2 ? '#ff0' : '#f00';
+          ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 30, barWidth * hpPct, 10);
+          ctx.fillStyle = '#fff';
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`BOSS: ${Math.ceil(this.health)}/${this.maxHealth}`, this.x, this.y - this.radius - 40);
+
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 30;
+          ctx.fillStyle = this.color;
+          ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(this.x, this.y - 10, this.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.beginPath(); ctx.arc(this.x, this.y - 10, this.radius * 0.2, 0, Math.PI * 2); ctx.fill();
+
+          if (this.phase >= 2) {
+            this.tentacles.forEach(t => {
+              const tx = this.x + Math.cos(t.angle) * t.length;
+              const ty = this.y + Math.sin(t.angle) * t.length;
+              ctx.strokeStyle = '#f55';
+              ctx.lineWidth = 8;
+              ctx.beginPath();
+              ctx.moveTo(this.x, this.y);
+              ctx.lineTo(tx, ty);
+              ctx.stroke();
             });
+          }
+
+          if (this.beamActive) {
+            const progress = (Date.now() - this.beamStart) / 1500;
+            if (progress < 1) {
+              const beamX = lerp(this.x, this.beamTarget.x, progress);
+              const beamY = lerp(this.y, this.beamTarget.y, progress);
+              ctx.strokeStyle = '#f0f';
+              ctx.lineWidth = 6;
+              ctx.beginPath();
+              ctx.moveTo(this.x, this.y);
+              ctx.lineTo(beamX, beamY);
+              ctx.stroke();
+
+              if (dist(beamX, beamY, state.player.x, state.player.y) < 20 && !state.player.invincible) {
+                state.player.health -= 0.8;
+              }
+            }
+          }
+
+          this.minions.forEach(m => {
+            ctx.fillStyle = m.color;
+            ctx.beginPath(); ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          });
         }
 
-        // Whitelist management
-        function getWhitelist() {
-            const whitelist = localStorage.getItem('whitelist');
-            return whitelist ? JSON.parse(whitelist) : [];
+        isDead() { return this.health <= 0; }
+      }
+
+      // ===== Game Logic =====
+      function update() {
+        if (state.screen !== 'game' || !state.running) return;
+
+        if (state.player) {
+          let vx = 0, vy = 0;
+          if (state.keys['w'] || state.keys['arrowup']) vy -= state.player.speed;
+          if (state.keys['s'] || state.keys['arrowdown']) vy += state.player.speed;
+          if (state.keys['a'] || state.keys['arrowleft']) vx -= state.player.speed;
+          if (state.keys['d'] || state.keys['arrowright']) vx += state.player.speed;
+
+          const speed = Math.hypot(vx, vy);
+          if (speed > 0) {
+            vx = (vx / speed) * state.player.speed;
+            vy = (vy / speed) * state.player.speed;
+          }
+
+          state.player.x += vx;
+          state.player.y += vy;
+          state.player.x = clamp(state.player.x, state.player.radius, CONFIG.SCREEN_WIDTH - state.player.radius);
+          state.player.y = clamp(state.player.y, state.player.radius, CONFIG.SCREEN_HEIGHT - state.player.radius);
+
+          if (state.player.reloading) {
+            if (Date.now() - state.player.reloadStart > state.player.reloadTime) {
+              state.player.ammo = state.player.magazineSize;
+              state.player.reloading = false;
+              updateReloadDisplay();
+            }
+          }
+
+          if (!state.player.cooldowns) {
+            state.player.cooldowns = { q: 0, e: 0 };
+          }
+
+          if (state.player.cooldowns.q > 0) state.player.cooldowns.q -= 16.67;
+          if (state.player.cooldowns.e > 0) state.player.cooldowns.e -= 16.67;
+
+          if (state.player.invincible && Date.now() > state.player.invincibleUntil) state.player.invincible = false;
+          if (state.player.damageReduction && Date.now() > state.player.damageReductionUntil) state.player.damageReduction = 0;
         }
 
-        function saveWhitelist(whitelist) {
-            localStorage.setItem('whitelist', JSON.stringify(whitelist));
+        separateEnemies();
+
+        // Drones, Singularities, etc.
+
+        state.drones.forEach(drone => {
+          drone.angle += 0.03;
+          drone.x = state.player.x + Math.cos(drone.angle) * drone.radius;
+          drone.y = state.player.y + Math.sin(drone.angle) * drone.radius;
+          if (state.enemies.length > 0 && Date.now() - drone.lastShot > drone.shootCooldown) {
+            const closest = state.enemies.reduce((a, b) =>
+              dist(drone.x, drone.y, a.x, a.y) < dist(drone.x, drone.y, b.x, b.y) ? a : b
+            );
+            const dx = closest.x - drone.x;
+            const dy = closest.y - drone.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 0) {
+              const vx = (dx / d) * CONFIG.BULLET_SPEED * 0.8;
+              const vy = (dy / d) * CONFIG.BULLET_SPEED * 0.8;
+              state.bullets.push({ x: drone.x, y: drone.y, vx, vy, radius: 3, damage: 15, color: '#0f8' });
+              drone.lastShot = Date.now();
+            }
+          }
+        });
+
+        for (let i = state.singularities.length - 1; i >= 0; i--) {
+          const s = state.singularities[i];
+          if (Date.now() > s.endTime) {
+            state.singularities.splice(i, 1);
+            continue;
+          }
+          s.radius = lerp(5, s.maxRadius, 1 - (s.endTime - Date.now()) / s.duration);
+          state.enemies.forEach(e => {
+            const d = dist(s.x, s.y, e.x, e.y);
+            if (d < s.maxRadius + e.radius && d > 0) {
+              const pull = 0.8 * (1 - d / (s.maxRadius + e.radius));
+              const dx = s.x - e.x;
+              const dy = s.y - e.y;
+              const len = Math.hypot(dx, dy);
+              e.x += (dx / len) * pull;
+              e.y += (dy / len) * pull;
+            }
+          });
         }
 
-        function isWhitelisted(username) {
-            const whitelist = getWhitelist();
-            return whitelist.includes(username.toLowerCase());
+        if (state.screenShake.time > 0) {
+          state.screenShake.time -= 16.67;
+          const progress = state.screenShake.time / 200;
+          const intensity = lerp(0, state.screenShake.intensity, progress);
+          state.screenShake.x = (Math.random() - 0.5) * intensity;
+          state.screenShake.y = (Math.random() - 0.5) * intensity;
+        } else {
+          state.screenShake.x = 0;
+          state.screenShake.y = 0;
         }
 
-        function addToWhitelist() {
-            const input = document.getElementById('whitelistUsername');
-            const username = input.value.trim().toLowerCase();
-            
-            if (!username) {
-                showError('Please enter a username');
-                return;
-            }
-
-            const whitelist = getWhitelist();
-            if (whitelist.includes(username)) {
-                showError('User already whitelisted');
-                return;
-            }
-
-            whitelist.push(username);
-            saveWhitelist(whitelist);
-            input.value = '';
-            renderWhitelist();
-            showSuccess('User added to whitelist');
+        if (state.damageOverlayAlpha > 0) {
+          state.damageOverlayAlpha = Math.max(0, state.damageOverlayAlpha - (CONFIG.DAMAGE_OVERLAY_MAX / CONFIG.DAMAGE_OVERLAY_FADE));
+          damageOverlay.style.background = `rgba(255,0,0,${state.damageOverlayAlpha})`;
         }
 
-        function removeFromWhitelist(username) {
-            let whitelist = getWhitelist();
-            whitelist = whitelist.filter(u => u !== username);
-            saveWhitelist(whitelist);
-            renderWhitelist();
-            showSuccess('User removed from whitelist');
-        }
+        // ✅ FIXED: Bullet collision with enemies
+        for (let i = state.bullets.length - 1; i >= 0; i--) {
+          const b = state.bullets[i];
+          b.x += b.vx;
+          b.y += b.vy;
 
-        function renderWhitelist() {
-            const list = document.getElementById('whitelistList');
-            const whitelist = getWhitelist();
-            
-            if (whitelist.length === 0) {
-                list.innerHTML = '<p style="color: #aaa; text-align: center;">No users whitelisted</p>';
-                return;
-            }
+          if (b.x < -100 || b.x > CONFIG.SCREEN_WIDTH + 100 || b.y < -100 || b.y > CONFIG.SCREEN_HEIGHT + 100) {
+            state.bullets.splice(i, 1);
+            continue;
+          }
 
-            list.innerHTML = whitelist.map(username => `
-                <div class="whitelist-item">
-                    <span>${username}</span>
-                    <button class="remove-btn" onclick="removeFromWhitelist('${username}')">REMOVE</button>
-                </div>
-            `).join('');
-        }
+          let hit = false;
+          for (let j = state.enemies.length - 1; j >= 0; j--) {
+            const e = state.enemies[j];
+            if (dist(b.x, b.y, e.x, e.y) < b.radius + e.radius) {
+              e.health -= b.damage;
+              state.bullets.splice(i, 1);
+              hit = true;
 
-        // Check access on page load
-        function checkAccess() {
-            const registeredUser = getRegisteredUser();
-            
-            // Show delete button if user is registered (except admin)
-            if (registeredUser && registeredUser !== ADMIN_PASSWORD) {
-                document.getElementById('deleteAccountSection').classList.remove('hidden');
-            }
-            
-            // Admin check
-            if (registeredUser === ADMIN_PASSWORD) {
-                showMainContent(true);
-                return;
-            }
+              for (let k = 0; k < 4; k++) {
+                addParticle(b.x, b.y, rand(-1,1), rand(-1,1), e.color);
+              }
 
-            // Regular user check
-            if (registeredUser && isWhitelisted(registeredUser)) {
-                const userData = getUserData(registeredUser);
-                if (userData) {
-                    showMainContent(false);
-                    return;
-                }
-            }
-
-            // If user is registered but not whitelisted
-            if (registeredUser && !isWhitelisted(registeredUser)) {
-                showError('Access denied. You are not whitelisted.');
-                setTimeout(() => {
-                    window.location.href = 'about:blank';
-                }, 2000);
-                return;
-            }
-
-            // Show auth screen
-            document.getElementById('authScreen').classList.remove('hidden');
-        }
-
-        // Show main content
-        function showMainContent(isAdmin) {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            
-            if (isAdmin) {
-                document.getElementById('adminPanel').classList.remove('hidden');
-                renderWhitelist();
-            }
-        }
-
-        // Auth form handling
-        document.getElementById('authForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-
-            if (!username) {
-                showError('Please enter a username');
-                return;
-            }
-
-            if (isLoginMode) {
-                // Login logic
-                const registeredUser = getRegisteredUser();
+              if (e.health <= 0) {
+                state.score += e.points * (1 + state.wave * 0.1);
+                state.enemyCount--;
+                state.enemiesKilled++; // ✅ Increment kill counter
+                document.getElementById('score').textContent = state.score;
+                document.getElementById('enemy-count').textContent = state.enemyCount;
                 
-                // Admin login
-                if (username === ADMIN_PASSWORD) {
-                    if (registeredUser && registeredUser !== ADMIN_PASSWORD) {
-                        showError('This device is already registered to another user');
-                        return;
+                // Coin drop
+                if (Math.random() < e.coinChance) {
+                  spawnCoin(e.x, e.y);
+                }
+
+                // Special behaviors
+                if (e.explodes) {
+                  // Explosion damage to nearby enemies
+                  state.enemies.forEach(other => {
+                    if (other !== e && dist(e.x, e.y, other.x, other.y) < 80) {
+                      other.health -= 20;
                     }
-                    registerUser(ADMIN_PASSWORD, ADMIN_PASSWORD);
-                    showSuccess('Admin access granted!');
-                    setTimeout(() => showMainContent(true), 1000);
-                    return;
+                  });
+                  // Explosion particles
+                  for (let p = 0; p < 30; p++) {
+                    addParticle(e.x, e.y, rand(-5,5), rand(-5,5), '#f80', 40);
+                  }
+                  shakeScreen(10, 200);
                 }
 
-                // Regular user login
-                if (!registeredUser) {
-                    showError('No account found on this device. Please sign up first.');
-                    return;
+                if (e.splits) {
+                  // Spawn 2 smaller enemies
+                  for (let s = 0; s < 2; s++) {
+                    state.enemies.push({
+                      x: e.x + rand(-30, 30),
+                      y: e.y + rand(-30, 30),
+                      radius: e.radius * 0.6,
+                      speed: e.speed * 1.3,
+                      maxHealth: e.maxHealth * 0.4,
+                      health: e.maxHealth * 0.4,
+                      color: e.color,
+                      vx: 0, vy: 0, damageCooldown: 0,
+                      stunned: false, stunUntil: 0,
+                      damage: e.damage * 0.7,
+                      type: 'swarm',
+                      points: e.points * 0.5,
+                      coinChance: e.coinChance,
+                      splits: false // prevent infinite split
+                    });
+                    state.enemyCount++;
+                  }
                 }
 
-                if (registeredUser.toLowerCase() !== username.toLowerCase()) {
-                    showError('This username does not match the registered account on this device');
-                    return;
-                }
+                for (let k = 0; k < 20; k++) addParticle(e.x, e.y, rand(-5,5), rand(-5,5), e.color);
+                shakeScreen(5, 150);
+                state.enemies.splice(j, 1);
+              }
 
-                if (!isWhitelisted(username)) {
-                    showError('Access denied. You are not whitelisted.');
-                    setTimeout(() => {
-                        window.location.href = 'about:blank';
-                    }, 2000);
-                    return;
-                }
-
-                const userData = getUserData(username);
-                if (!userData || userData.password !== password) {
-                    showError('Incorrect password');
-                    return;
-                }
-
-                showSuccess('Welcome back, ' + username + '!');
-                setTimeout(() => showMainContent(false), 1000);
-            } else {
-                // Signup logic
-                if (isUserRegistered()) {
-                    // Show delete button and error
-                    document.getElementById('deleteAccountSection').classList.remove('hidden');
-                    showError('This device already has a registered account');
-                    return;
-                }
-
-                // Check if admin password is being used
-                if (username === ADMIN_PASSWORD) {
-                    registerUser(ADMIN_PASSWORD, ADMIN_PASSWORD);
-                    showSuccess('Admin account created!');
-                    setTimeout(() => showMainContent(true), 1000);
-                    return;
-                }
-
-                // Check if whitelisted
-                if (!isWhitelisted(username)) {
-                    showError('Access denied. You are not whitelisted. Contact the admin.');
-                    return;
-                }
-
-                const newPassword = generatePassword();
-                registerUser(username, newPassword);
-                
-                // Display password
-                document.getElementById('passwordDisplay').innerHTML = `
-                    <div class="password-display">
-                        <div class="password-label">⚠️ YOUR SECRET PASSWORD ⚠️</div>
-                        <div class="password-value">${newPassword}</div>
-                        <div class="password-label" style="margin-top: 10px; font-size: 0.85em;">Write this down! You'll need it to access games.</div>
-                    </div>
-                `;
-                
-                showSuccess('Account created! Save your password!');
-                setTimeout(() => showMainContent(false), 5000);
+              break;
             }
+          }
+
+          if (!hit) {
+            for (let j = state.bosses.length - 1; j >= 0; j--) {
+              const boss = state.bosses[j];
+              if (dist(b.x, b.y, boss.x, boss.y) < b.radius + boss.radius) {
+                boss.takeDamage(b.damage);
+                state.bullets.splice(i, 1);
+                hit = true;
+                break;
+              }
+            }
+          }
+        }
+
+        // Enemies update
+        for (let i = state.enemies.length - 1; i >= 0; i--) {
+          const e = state.enemies[i];
+          if (e.stunned && Date.now() > e.stunUntil) e.stunned = false;
+          if (!e.stunned && !state.timeWarpActive) {
+            const dx = state.player.x - e.x;
+            const dy = state.player.y - e.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 0) {
+              e.vx = (dx / d) * e.speed;
+              e.vy = (dy / d) * e.speed;
+            }
+            e.x += e.vx;
+            e.y += e.vy;
+          }
+
+          // Sniper beam attack
+          if (e.type === 'sniper' && state.player) {
+            const d = dist(e.x, e.y, state.player.x, state.player.y);
+            if (d < e.beamRange && Date.now() - e.lastBeam > e.beamCooldown) {
+              e.lastBeam = Date.now();
+              // Beam visual
+              state.particles.push({
+                x: e.x,
+                y: e.y,
+                vx: 0,
+                vy: 0,
+                color: '#0ff',
+                life: 10,
+                maxLife: 10,
+                radius: 3,
+                beamTarget: { x: state.player.x, y: state.player.y }
+              });
+              // Damage player if in line
+              if (d < e.radius + state.player.radius + 10) {
+                if (!state.player.invincible) {
+                  state.player.health -= e.damage * 0.5;
+                  state.damageOverlayAlpha = CONFIG.DAMAGE_OVERLAY_MAX;
+                  damageOverlay.style.background = `rgba(255,0,0,${state.damageOverlayAlpha})`;
+                  shakeScreen(5, 150);
+                }
+              }
+            }
+          }
+
+          if (state.player && dist(e.x, e.y, state.player.x, state.player.y) < e.radius + state.player.radius) {
+            if (e.damageCooldown <= 0 && !state.player.invincible) {
+              const dmg = e.damage;
+              state.player.health -= dmg;
+              state.damageOverlayAlpha = CONFIG.DAMAGE_OVERLAY_MAX;
+              damageOverlay.style.background = `rgba(255,0,0,${state.damageOverlayAlpha})`;
+              e.damageCooldown = 30;
+              shakeScreen(8, 200);
+              for (let i = 0; i < 5; i++) addParticle(state.player.x, state.player.y, rand(-3,3), rand(-3,3), '#f55');
+            }
+          }
+          if (e.damageCooldown > 0) e.damageCooldown--;
+
+          if (e.x < -200 || e.x > CONFIG.SCREEN_WIDTH + 200 || e.y < -200 || e.y > CONFIG.SCREEN_HEIGHT + 200) {
+            state.enemies.splice(i, 1);
+            state.enemyCount--;
+            document.getElementById('enemy-count').textContent = state.enemyCount;
+          }
+        }
+
+        // ✅ FIXED: Boss spawns ONLY after 20 kills in current game
+        if (state.enemiesKilled >= CONFIG.BOSS_SPAWN_KILLS && state.enemyCount === 0 && state.enemies.length === 0 && state.bosses.length === 0 && !state.bossActive) {
+          spawnBoss();
+        }
+
+        // Bosses — chase, no game over on death
+        for (let i = state.bosses.length - 1; i >= 0; i--) {
+          const b = state.bosses[i];
+          b.update();
+          if (b.isDead()) {
+            state.score += 200 + state.wave * 50;
+            state.bossActive = false;
+            for (let c = 0; c < 20; c++) {
+              state.coinsOnMap.push({
+                x: b.x + rand(-150, 150),
+                y: b.y + rand(-150, 150),
+                radius: 10,
+                vy: rand(-3, -1),
+                life: 400,
+                collected: false
+              });
+            }
+            state.bosses.splice(i, 1);
+            // ✅ Continue game even if boss was alive
+          }
+        }
+
+        // Particles — including beams
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+          const p = state.particles[i];
+          if (p.beamTarget) {
+            // Beam particle moves toward target
+            const dx = p.beamTarget.x - p.x;
+            const dy = p.beamTarget.y - p.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 1) {
+              p.x += (dx / d) * 10;
+              p.y += (dy / d) * 10;
+            }
+            p.life--;
+            if (p.life <= 0) state.particles.splice(i, 1);
+          } else {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            p.vx *= 0.98;
+            p.vy *= 0.98;
+            if (p.life <= 0) state.particles.splice(i, 1);
+          }
+        }
+
+        // Coins
+        for (let i = state.coinsOnMap.length - 1; i >= 0; i--) {
+          const c = state.coinsOnMap[i];
+          c.y += c.vy;
+          c.vy += 0.05;
+          c.life--;
+          if (state.player && dist(c.x, c.y, state.player.x, state.player.y) < c.radius + state.player.radius) {
+            state.coins++;
+            playerData.coins++;
+            users[currentUser] = playerData;
+            saveUsers();
+            coinsDisplay.textContent = `🪙 ${playerData.coins}`;
+            state.coinsOnMap.splice(i, 1);
+            addParticle(c.x, c.y, 0, -3, '#ff0', 20);
+            continue;
+          }
+          if (c.life <= 0 || c.y > CONFIG.SCREEN_HEIGHT + 50) {
+            state.coinsOnMap.splice(i, 1);
+          }
+        }
+
+        // ✅ FIXED: Spawn enemies with time-based interval
+        const spawnInterval = Math.max(200, CONFIG.ENEMY_SPAWN_BASE - (state.wave - 1) * 10);
+        if (!state.bossActive && Date.now() - state.lastSpawnTime > spawnInterval) {
+          state.lastSpawnTime = Date.now();
+          spawnEnemy();
+          state.waveStarted = true; // ✅ Mark that wave has started spawning
+        }
+
+        // ✅ FIXED: Wave progression only when enemies are cleared
+        if (state.enemyCount === 0 && state.enemies.length === 0 && !state.bossActive && state.waveStarted) {
+          state.wave++;
+          state.waveStarted = false; // ✅ Reset for next wave
+          document.getElementById('wave').textContent = state.wave;
+        }
+
+        if (state.timeWarpActive && Date.now() > state.timeWarpUntil) {
+          state.timeWarpActive = false;
+        }
+
+        // Game over only on player death
+        if (state.player && state.player.health <= 0) {
+          gameOver();
+        }
+        if (state.player) {
+          document.getElementById('health').textContent = Math.max(0, Math.floor(state.player.health));
+        }
+      }
+
+      function render() {
+        if (state.screen !== 'game') return;
+
+        const { ctx } = state;
+        ctx.fillStyle = 'rgba(5,5,16,0.2)';
+        ctx.fillRect(0, 0, CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT);
+        ctx.save();
+        ctx.translate(state.screenShake.x, state.screenShake.y);
+
+        // Coins, Bullets, Drones, Singularities, Bosses, Enemies, Player, Particles — same
+
+        state.coinsOnMap.forEach(c => {
+          ctx.fillStyle = '#ff0';
+          ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#ff8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(c.x - c.radius * 0.3, c.y - c.radius * 0.3, c.radius * 0.25, 0, Math.PI * 2); ctx.fill();
         });
 
-        // Toggle between login and signup
-        document.getElementById('toggleLink').addEventListener('click', function() {
-            isLoginMode = !isLoginMode;
-            const passwordGroup = document.getElementById('passwordGroup');
-            
-            if (isLoginMode) {
-                passwordGroup.style.display = 'block';
-                document.getElementById('authTitle').textContent = 'LOGIN';
-                document.getElementById('authSubmit').textContent = 'ENTER';
-                document.getElementById('toggleText').innerHTML = 'Don\'t have an account? <a id="toggleLink">Sign Up</a>';
-            } else {
-                passwordGroup.style.display = 'none';
-                document.getElementById('authTitle').textContent = 'SIGN UP';
-                document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
-                document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
-            }
-            
-            // Re-attach event listener
-            document.getElementById('toggleLink').addEventListener('click', arguments.callee);
-            clearMessages();
+        state.bullets.forEach(b => {
+          ctx.fillStyle = b.color;
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = b.color === '#ff0' ? '#ff8' : b.color + '8';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(b.x - b.vx * 0.5, b.y - b.vy * 0.5); ctx.lineTo(b.x, b.y); ctx.stroke();
         });
 
-        // Game access with password
-        function requestGameAccess(url) {
-            const registeredUser = getRegisteredUser();
-            
-            // Admin bypass
-            if (registeredUser === ADMIN_PASSWORD) {
-                window.open(url, '_blank');
-                return;
-            }
-            
-            pendingGameUrl = url;
-            document.getElementById('passwordModal').classList.remove('hidden');
-            document.getElementById('gamePassword').focus();
-        }
-
-        function closePasswordModal() {
-            document.getElementById('passwordModal').classList.add('hidden');
-            document.getElementById('gamePassword').value = '';
-            document.getElementById('modalError').innerHTML = '';
-            pendingGameUrl = null;
-        }
-
-        document.getElementById('passwordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const enteredPassword = document.getElementById('gamePassword').value;
-            const registeredUser = getRegisteredUser();
-            const userData = getUserData(registeredUser);
-            
-            if (userData && userData.password === enteredPassword) {
-                window.open(pendingGameUrl, '_blank');
-                closePasswordModal();
-            } else {
-                document.getElementById('modalError').innerHTML = '<div class="error-message">Incorrect password!</div>';
-            }
+        state.drones.forEach(d => {
+          ctx.fillStyle = '#0f8';
+          ctx.beginPath(); ctx.arc(d.x, d.y, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#0af';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(d.x, d.y, 8, 0, Math.PI * 2); ctx.stroke();
         });
 
-        // Logout
-        function logout() {
-            document.getElementById('mainContent').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('passwordDisplay').innerHTML = '';
-            clearMessages();
+        state.singularities.forEach(s => {
+          const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.radius);
+          grad.addColorStop(0, 'rgba(0,0,0,0)');
+          grad.addColorStop(0.7, 'rgba(255,100,255,0.3)');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+        });
+
+        state.bosses.forEach(b => b.draw(ctx));
+
+        state.enemies.forEach(e => {
+          const hpPct = e.health / e.maxHealth;
+          const barWidth = e.radius * 2;
+          ctx.fillStyle = '#300';
+          ctx.fillRect(e.x - e.radius, e.y - e.radius - 10, barWidth, 4);
+          ctx.fillStyle = hpPct > 0.5 ? '#0f0' : hpPct > 0.25 ? '#ff0' : '#f00';
+          ctx.fillRect(e.x - e.radius, e.y - e.radius - 10, barWidth * hpPct, 4);
+          ctx.shadowColor = e.color;
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = e.color;
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+        });
+
+        if (state.player) {
+          ctx.strokeStyle = state.player.trailColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(state.player.x - state.player.vx * 2, state.player.y - state.player.vy * 2);
+          ctx.lineTo(state.player.x, state.player.y);
+          ctx.stroke();
+
+          ctx.shadowColor = state.player.color;
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = state.player.color;
+          ctx.beginPath(); ctx.arc(state.player.x, state.player.y, state.player.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(state.player.x, state.player.y, state.player.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+
+          if (state.player.invincible) {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(state.player.x, state.player.y, state.player.radius + 5, 0, Math.PI * 2); ctx.stroke();
+          }
         }
 
-        // Delete account function
-        function deleteAccount() {
-            if (!confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
-                return;
-            }
+        state.particles.forEach(p => {
+          ctx.globalAlpha = p.life / p.maxLife;
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        });
 
-            const registeredUser = getRegisteredUser();
-            
-            if (!registeredUser || registeredUser === ADMIN_PASSWORD) {
-                showError('Cannot delete admin account');
-                return;
-            }
+        ctx.restore();
 
-            // Remove user data
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            delete users[registeredUser.toLowerCase()];
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            // Clear registration
-            localStorage.removeItem('registeredUser');
-            localStorage.removeItem('registrationDate');
-            
-            // Hide delete button and show success
-            document.getElementById('deleteAccountSection').classList.add('hidden');
-            showSuccess('Account deleted! You can now create a new account.');
-            
-            // Clear form
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('passwordDisplay').innerHTML = '';
-            
-            // Switch to signup mode
-            isLoginMode = false;
-            document.getElementById('passwordGroup').style.display = 'none';
-            document.getElementById('authTitle').textContent = 'SIGN UP';
-            document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
-            document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
-            
-            // Re-attach toggle event listener
-            document.getElementById('toggleLink').addEventListener('click', function() {
-                isLoginMode = !isLoginMode;
-                const passwordGroup = document.getElementById('passwordGroup');
-                
-                if (isLoginMode) {
-                    passwordGroup.style.display = 'block';
-                    document.getElementById('authTitle').textContent = 'LOGIN';
-                    document.getElementById('authSubmit').textContent = 'ENTER';
-                    document.getElementById('toggleText').innerHTML = 'Don\'t have an account? <a id="toggleLink">Sign Up</a>';
-                } else {
-                    passwordGroup.style.display = 'none';
-                    document.getElementById('authTitle').textContent = 'SIGN UP';
-                    document.getElementById('authSubmit').textContent = 'CREATE ACCOUNT';
-                    document.getElementById('toggleText').innerHTML = 'Already have an account? <a id="toggleLink">Login</a>';
-                }
-                
-                document.getElementById('toggleLink').addEventListener('click', arguments.callee);
-                clearMessages();
-            });
+        // Radar — same
+
+        const radarCtx = state.radarCtx;
+        radarCtx.clearRect(0, 0, 150, 150);
+        const scale = 0.05;
+        radarCtx.fillStyle = state.player?.color || '#0ff';
+        radarCtx.beginPath(); radarCtx.arc(75, 75, 4, 0, Math.PI * 2); radarCtx.fill();
+        state.enemies.forEach(e => {
+          const rx = 75 + (e.x - state.player.x) * scale;
+          const ry = 75 + (e.y - state.player.y) * scale;
+          if (rx >= 0 && rx <= 150 && ry >= 0 && ry <= 150) {
+            radarCtx.fillStyle = e.color;
+            radarCtx.beginPath(); radarCtx.arc(rx, ry, 3, 0, Math.PI * 2); radarCtx.fill();
+          }
+        });
+        state.bosses.forEach(b => {
+          const rx = 75 + (b.x - state.player.x) * scale;
+          const ry = 75 + (b.y - state.player.y) * scale;
+          if (rx >= 0 && rx <= 150 && ry >= 0 && ry <= 150) {
+            radarCtx.fillStyle = '#f00';
+            radarCtx.beginPath(); radarCtx.arc(rx, ry, 5, 0, Math.PI * 2); radarCtx.fill();
+          }
+        });
+        state.coinsOnMap.forEach(c => {
+          const rx = 75 + (c.x - state.player.x) * scale;
+          const ry = 75 + (c.y - state.player.y) * scale;
+          if (rx >= 0 && rx <= 150 && ry >= 0 && ry <= 150) {
+            radarCtx.fillStyle = '#ff0';
+            radarCtx.beginPath(); radarCtx.arc(rx, ry, 2, 0, Math.PI * 2); radarCtx.fill();
+          }
+        });
+
+        if (state.player) {
+          const qPct = Math.max(0, state.player.cooldowns.q / AVATARS[state.selectedAvatar].abilities.q.cooldown);
+          const ePct = Math.max(0, state.player.cooldowns.e / AVATARS[state.selectedAvatar].abilities.e.cooldown);
+          updateCooldownMask('q', qPct);
+          updateCooldownMask('e', ePct);
+        }
+      }
+
+      function updateCooldownMask(key, pct) {
+        const el = document.getElementById(`${key}-cooldown`);
+        if (!el) return;
+        const angle = 2 * Math.PI * (1 - pct);
+        const x = 50 + 50 * Math.sin(angle);
+        const y = 50 - 50 * Math.cos(angle);
+        const points = `50% 50%, 50% 0%, ${x}% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%`;
+        el.style.clipPath = `polygon(${points})`;
+      }
+
+      function gameLoop() {
+        update();
+        render();
+        requestAnimationFrame(gameLoop);
+      }
+
+      // ===== SCREENS =====
+      function showScreen(id) {
+        ['login-screen','signup-screen','title-screen','avatar-screen','game-screen','game-over-screen'].forEach(s => {
+          document.getElementById(s).style.display = 'none';
+        });
+        if (id === 'login') document.getElementById('login-screen').style.display = 'flex';
+        if (id === 'signup') document.getElementById('signup-screen').style.display = 'flex';
+        if (id === 'title') document.getElementById('title-screen').style.display = 'flex';
+        if (id === 'avatar') {
+          document.getElementById('avatar-screen').style.display = 'flex';
+          syncAvatars(); updateAvatarUI();
+        }
+        if (id === 'game') document.getElementById('game-screen').style.display = 'block';
+        if (id === 'gameover') document.getElementById('game-over-screen').style.display = 'flex';
+        state.screen = id;
+      }
+
+      function startGameWithAvatar(key) {
+        const avatar = AVATARS[key];
+        if (!avatar || !avatar.unlocked) {
+          alert("Please select a valid avatar first.");
+          return;
         }
 
-        // Message functions
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.innerHTML = `<div class="error-message">${message}</div>`;
-            setTimeout(clearMessages, 5000);
-        }
+        state.selectedAvatar = key;
+        state.player = {
+          x: CONFIG.SCREEN_WIDTH / 2,
+          y: CONFIG.SCREEN_HEIGHT / 2,
+          vx: 0, vy: 0,
+          radius: CONFIG.PLAYER_SIZE / 2,
+          health: avatar.health,
+          maxHealth: avatar.health,
+          speed: avatar.speed,
+          bulletDamage: avatar.bulletDamage,
+          shootCooldown: avatar.shootCooldown,
+          color: avatar.color,
+          trailColor: avatar.trailColor,
+          particleColor: avatar.particleColor,
+          avatar,
+          cooldowns: { q: 0, e: 0 },
+          invincible: false,
+          invincibleUntil: 0,
+          damageReduction: 0,
+          damageReductionUntil: 0,
+          magazineSize: avatar.magazineSize,
+          ammo: avatar.magazineSize,
+          reloadTime: avatar.reloadTime,
+          reloading: false,
+          reloadStart: 0
+        };
 
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.innerHTML = `<div class="success-message">${message}</div>`;
-        }
+        state.running = true;
+        state.gameOver = false;
+        state.score = 0;
+        state.wave = 1;
+        state.enemyCount = 0;
+        state.enemiesKilled = 0;
+        state.coins = 0;
+        state.bullets = [];
+        state.enemies = [];
+        state.particles = [];
+        state.coinsOnMap = [];
+        state.drones = [];
+        state.singularities = [];
+        state.bosses = [];
+        state.bossActive = false;
+        state.timeWarpActive = false;
+        state.gameStartTime = Date.now();
+        state.lastSpawnTime = Date.now(); // ✅ Start spawn timer
+        state.waveStarted = false;         // ✅ Wave hasn't started spawning yet
 
-        function clearMessages() {
-            document.getElementById('errorMessage').innerHTML = '';
-            document.getElementById('successMessage').innerHTML = '';
-        }
+        document.getElementById('health').textContent = avatar.health;
+        document.getElementById('score').textContent = '0';
+        document.getElementById('wave').textContent = '1';
+        document.getElementById('enemy-count').textContent = '0';
+        updateReloadDisplay();
 
-        // Initialize on page load
-        getDeviceId(); // Initialize device ID
-        checkAccess();
-    </script>
+        showScreen('game');
+      }
+
+      function gameOver() {
+        state.running = false;
+        state.gameOver = true;
+
+        playerData.coins += state.coins;
+        users[currentUser] = playerData;
+        saveUsers();
+        coinsDisplay.textContent = `🪙 ${playerData.coins}`;
+
+        const filtered = leaderboard.filter(entry => entry.name !== currentUser);
+        filtered.push({ 
+          name: currentUser, 
+          score: state.score, 
+          time: Date.now() 
+        });
+        filtered.sort((a, b) => b.score - a.score);
+        while (filtered.length > 20) filtered.pop();
+        leaderboard.splice(0, leaderboard.length, ...filtered);
+        saveLeaderboard();
+        updateLeaderboard();
+
+        document.getElementById('final-score').textContent = state.score;
+        document.getElementById('coins-earned').textContent = state.coins;
+        document.getElementById('final-avatar').textContent = AVATARS[state.selectedAvatar].name;
+        showScreen('gameover');
+      }
+
+      // ===== Events =====
+      document.getElementById('start-btn').addEventListener('click', () => showScreen('avatar'));
+      document.querySelectorAll('.avatar-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const key = card.dataset.avatar;
+          const avatar = AVATARS[key];
+          if (!avatar.unlocked && playerData.coins >= avatar.cost) {
+            playerData.coins -= avatar.cost;
+            playerData.unlockedAvatars.push(key);
+            users[currentUser] = playerData;
+            saveUsers();
+            syncAvatars(); updateAvatarUI();
+          }
+          if (avatar.unlocked) {
+            document.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('confirm-avatar-btn').disabled = false;
+            document.getElementById('confirm-avatar-btn').onclick = () => startGameWithAvatar(key);
+          }
+        });
+      });
+      document.getElementById('retry-btn').addEventListener('click', () => {
+        if (state.selectedAvatar) startGameWithAvatar(state.selectedAvatar);
+      });
+      document.getElementById('back-to-avatars-btn').addEventListener('click', () => showScreen('avatar'));
+
+      // Start!
+      requestAnimationFrame(gameLoop);
+      console.log("✅ NEON SHOOTER v6.8 — LOGIN/SIGNUP WORK, PLAYER MOVEMENT RESTORED, ENEMIES DON'T OVERLAP, BOSS SPAWNS AFTER 20 KILLS, WAVE PROGRESSION FIXED. All systems GO, Gordon!");
+    });
+  </script>
 </body>
 </html>
