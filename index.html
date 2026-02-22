@@ -1,803 +1,863 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sans Arena — Live Gist</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace}#canvas{border:2px solid #555;box-shadow:0 0 20px #ff2255}.screen{position:absolute;color:white;text-align:center;font-size:24px;background:rgba(0,0,0,.85);padding:30px;border:2px solid #ff5588;border-radius:10px;z-index:10;display:none}input{display:block;width:240px;margin:15px auto;padding:10px;font-size:18px;border:2px solid #88ff88;border-radius:6px;background:#111;color:white}button{display:block;margin:8px auto;padding:10px 20px;min-width:180px;font-size:18px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;transition:all .2s}.btn-login{background:#55cc55;color:white}.btn-new{background:#ffaa55;color:#222}.btn-start{background:#ff5555;color:white}.btn-switch{background:#5588ff;color:white}.btn-achieve{background:#aa55ff;color:white;margin-top:15px}.btn-back{background:#555555;color:white}.color-opt,.shape-opt,.trail-opt{display:inline-block;margin:5px;padding:8px 12px;border:1px solid #555;border-radius:4px;cursor:pointer}.color-opt:hover,.shape-opt:hover,.trail-opt:hover{transform:scale(1.05);border-color:#88ff88}.selected{border-color:#88ff88;background:rgba(136,255,136,0.2)}#customScreen{padding:20px}.opt-section{margin:15px 0;text-align:left}#sansQuote{position:absolute;top:500px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#88ff88;padding:12px 20px;border:1px solid #88ff88;border-radius:6px;font-size:20px;z-index:100;opacity:0;pointer-events:none;max-width:500px;text-align:center}
-.char-opt { display: flex; align-items: center; padding:12px; margin:8px 0; border:2px solid #555; border-radius:6px; cursor:pointer; }
-.char-opt:hover { border-color:#88ff88; background:rgba(136,255,136,0.1); }
-.char-opt.selected { border-color:#88ff88; background:rgba(136,255,136,0.2); }
-.char-color { width:20px; height:20px; margin-right:10px; border-radius:4px; }
-.char-name { font-weight:bold; font-size:20px; }
-.char-desc { font-size:14px; color:#aaa; margin-top:4px; }
-#leaderboard { margin-top:20px; text-align:left; background:rgba(30,30,40,0.6); padding:15px; border-radius:8px; }
-.lb-header { font-weight:bold; font-size:20px; margin-bottom:12px; color:#ffdd55; text-align:center; }
-.lb-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #333; }
-.lb-pos { width:30px; text-align:center; font-weight:bold; }
-.lb-name { flex:1; font-size:16px; }
-.lb-char { width:90px; text-align:center; font-size:14px; }
-.lb-score { width:70px; text-align:right; font-weight:bold; color:#ff5555; font-size:16px; }
-.lb-highlight { background:rgba(255,221,85,0.2) !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TANK CLASH ONLINE — Cross-Device PvP</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=VT323&display=swap');
+
+  :root {
+    --p1: #ff4040; --p1g: #ff8888;
+    --p2: #40c8ff; --p2g: #88e0ff;
+    --gold: #ffd700; --bg: #080810;
+    --panel: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'VT323', monospace;
+    color: #fff;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 36px 36px;
+    animation: gridMove 20s linear infinite;
+    pointer-events:none; z-index:0;
+  }
+  @keyframes gridMove { from{background-position:0 0} to{background-position:0 36px} }
+
+  #wrapper { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+
+  /* ─── HUD ─── */
+  #hud {
+    width:700px; height:62px;
+    display:flex; align-items:center;
+    background:rgba(0,0,0,0.75);
+    border:1px solid var(--border);
+    border-bottom:none; padding:0 12px;
+  }
+  .phud { flex:1; padding:4px 8px; }
+  .phud .pname { font-family:'Black Ops One',cursive; font-size:13px; letter-spacing:2px; margin-bottom:5px; }
+  .phud.p1 .pname { color:var(--p1); text-shadow:0 0 12px var(--p1); }
+  .phud.p2 .pname { color:var(--p2); text-shadow:0 0 12px var(--p2); text-align:right; }
+  .hp-bar-wrap { height:10px; background:rgba(255,255,255,0.08); border-radius:5px; overflow:hidden; }
+  .hp-bar { height:100%; border-radius:5px; transition:width 0.12s; }
+  .p1 .hp-bar { background:linear-gradient(90deg,#c00,var(--p1),var(--p1g)); box-shadow:0 0 8px var(--p1); }
+  .p2 .hp-bar { background:linear-gradient(90deg,var(--p2g),var(--p2),#007aaa); box-shadow:0 0 8px var(--p2); float:right; }
+  #hud-center { width:130px; text-align:center; flex-shrink:0; }
+  #score-display { font-family:'Black Ops One',cursive; font-size:26px; letter-spacing:8px; color:var(--gold); text-shadow:0 0 16px var(--gold); }
+  #conn-status { font-size:11px; letter-spacing:2px; color:#444; margin-top:2px; }
+
+  canvas { display:block; border:1px solid var(--border); box-shadow:0 0 80px rgba(0,0,0,0.95); }
+
+  /* ─── OVERLAY ─── */
+  #overlay {
+    position:absolute; top:62px; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.88); z-index:10; backdrop-filter:blur(3px);
+  }
+
+  #overlay h1 {
+    font-family:'Black Ops One',cursive; font-size:46px; letter-spacing:5px;
+    background:linear-gradient(135deg, var(--p1), var(--gold), var(--p2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    filter:drop-shadow(0 0 20px rgba(255,215,0,0.5));
+    animation:titlePulse 2.5s ease-in-out infinite; margin-bottom:4px;
+  }
+  @keyframes titlePulse {
+    0%,100%{filter:drop-shadow(0 0 16px rgba(255,215,0,0.4))}
+    50%{filter:drop-shadow(0 0 36px rgba(255,215,0,0.9))}
+  }
+  .tagline { font-size:14px; letter-spacing:6px; color:#555; margin-bottom:32px; }
+
+  /* ─── LOBBY ─── */
+  #lobby { display:flex; flex-direction:column; align-items:center; gap:14px; width:420px; }
+
+  .btn-row { display:flex; gap:16px; width:100%; }
+
+  .big-btn {
+    flex:1; background:transparent; cursor:pointer;
+    font-family:'Black Ops One',cursive; font-size:14px; letter-spacing:3px;
+    padding:16px 24px; transition:all 0.2s; position:relative; overflow:hidden;
+  }
+  .big-btn.gold {
+    border:2px solid var(--gold); color:var(--gold);
+    text-shadow:0 0 12px var(--gold);
+    box-shadow:0 0 24px rgba(255,215,0,0.2), inset 0 0 20px rgba(255,215,0,0.03);
+  }
+  .big-btn.gold:hover { background:rgba(255,215,0,0.08); box-shadow:0 0 40px rgba(255,215,0,0.4); transform:scale(1.03); }
+  .big-btn.red {
+    border:2px solid var(--p1); color:var(--p1);
+    text-shadow:0 0 12px var(--p1);
+    box-shadow:0 0 24px rgba(255,64,64,0.2);
+  }
+  .big-btn.red:hover { background:rgba(255,64,64,0.08); box-shadow:0 0 40px rgba(255,64,64,0.4); transform:scale(1.03); }
+  .big-btn.blue {
+    border:2px solid var(--p2); color:var(--p2);
+    text-shadow:0 0 12px var(--p2);
+    box-shadow:0 0 24px rgba(64,200,255,0.2);
+  }
+  .big-btn.blue:hover { background:rgba(64,200,255,0.08); box-shadow:0 0 40px rgba(64,200,255,0.4); transform:scale(1.03); }
+
+  /* code display box */
+  .code-box {
+    width:100%; background:rgba(255,215,0,0.04);
+    border:1px solid rgba(255,215,0,0.2); padding:16px;
+    text-align:center; display:none;
+  }
+  .code-label { font-size:11px; letter-spacing:4px; color:#555; margin-bottom:8px; }
+  .room-code {
+    font-family:'Black Ops One',cursive; font-size:38px; letter-spacing:10px;
+    color:var(--gold); text-shadow:0 0 20px var(--gold);
+  }
+  .code-hint { font-size:12px; color:#444; letter-spacing:2px; margin-top:8px; }
+
+  /* join input */
+  .join-box { width:100%; display:none; flex-direction:column; gap:10px; }
+  .join-box input {
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:#fff; font-family:'Black Ops One',cursive; font-size:28px;
+    letter-spacing:8px; padding:12px 16px; text-align:center; outline:none;
+    text-transform:uppercase; width:100%;
+  }
+  .join-box input:focus { border-color:var(--p2); box-shadow:0 0 20px rgba(64,200,255,0.2); }
+  .join-box input::placeholder { color:#333; }
+
+  /* status message */
+  #status-msg { font-size:16px; letter-spacing:3px; color:#666; min-height:22px; text-align:center; }
+  #status-msg.ok  { color:#4f4; text-shadow:0 0 12px #4f4; }
+  #status-msg.err { color:var(--p1); text-shadow:0 0 12px var(--p1); }
+  #status-msg.wait { color:var(--gold); text-shadow:0 0 10px var(--gold); }
+
+  /* win screen */
+  #win-msg { font-family:'Black Ops One',cursive; font-size:30px; letter-spacing:4px; margin-bottom:8px; display:none; }
+  #sub-msg  { font-size:17px; color:#555; letter-spacing:4px; margin-bottom:28px; display:none; }
+
+  /* controls hint */
+  .ctrl-hint { font-size:12px; color:#2a2a40; letter-spacing:2px; text-align:center; line-height:2; margin-top:8px; }
+
+  /* ping display */
+  #ping { font-size:11px; letter-spacing:2px; color:#333; }
+</style>
 </head>
 <body>
-<canvas id="canvas" width="800" height="600"></canvas>
-<div id="sansQuote"></div>
-<div id="authScreen" class="screen" style="display:block;">
-  <div>💀 Sans Arena — Live Leaderboard</div>
-  <input id="usernameInput" type="text" placeholder="Enter your name" maxlength="16" autocomplete="off">
-  <button id="loginBtn" class="btn-login">▶️ Continue</button>
-  <button id="newPlayerBtn" class="btn-new">🆕 New Player</button>
-  <div id="userList"></div>
-</div>
-<div id="customScreen" class="screen">
-  <div>🎨 Customize Your Soul</div>
-  <div class="opt-section"><div>Color:</div><div id="colorOptions"></div></div>
-  <div class="opt-section"><div>Shape:</div><div id="shapeOptions"></div></div>
-  <div class="opt-section"><div>Trail:</div><div id="trailOptions"></div></div>
-  <button id="saveCustomBtn" class="btn-login">💾 Save & Continue</button>
-  <button id="skipCustomBtn" class="btn-back">⏭️ Skip</button>
-</div>
-<div id="charSelectScreen" class="screen">
-  <div>🎭 Choose Your Fighter</div>
-  <div id="charOptions" style="margin:20px 0; text-align:left;"></div>
-  <button id="confirmCharBtn" class="btn-login">✅ Confirm</button>
-  <button id="backToCustomBtn" class="btn-back">⬅️ Back</button>
-</div>
-<div id="startScreen" class="screen">
-  <div>🎮 Welcome, <span id="displayName">-</span>!</div>
-  <button id="startBtn" class="btn-start">⚔️ Start Fight</button>
-  <div id="stats"></div>
-  <div id="leaderboard"></div>
-  <button id="achievementsBtn" class="btn-achieve">🏆 Achievements</button>
-</div>
-<div id="achievementsScreen" class="screen">
-  <div>🏆 Achievements</div>
-  <div id="achievementsList"></div>
-  <button id="backToStartBtn">⬅️ Back</button>
-</div>
-<div id="gameOver" class="screen">
-  <div>💀 You died.</div>
-  <div style="margin:15px 0;font-size:20px;">
-    <div>Score: <span class="highlight" id="finalScore">0</span></div>
-    <div>Time: <span class="highlight" id="finalTime">0s</span></div>
-    <div>Dodges: <span class="highlight" id="finalDodges">0</span></div>
+<div id="wrapper">
+  <div id="hud">
+    <div class="phud p1">
+      <div class="pname" id="p1name">▶ PLAYER 1</div>
+      <div class="hp-bar-wrap"><div class="hp-bar" id="hp1" style="width:100%"></div></div>
+    </div>
+    <div id="hud-center">
+      <div id="score-display">0 — 0</div>
+      <div id="conn-status">OFFLINE</div>
+    </div>
+    <div class="phud p2">
+      <div class="pname" id="p2name">PLAYER 2 ◀</div>
+      <div class="hp-bar-wrap"><div class="hp-bar" id="hp2" style="width:100%"></div></div>
+    </div>
   </div>
-  <button id="retryBtn" class="btn-start">↻ Try Again</button>
-  <button id="changeCharBtn" class="btn-switch">🎭 Change Character</button>
-  <button id="switchPlayerBtn" class="btn-switch">🔄 Switch Player</button>
-  <button id="menuBtn" class="btn-login">🏡 Main Menu</button>
-  <div id="leaderboardGameOver"></div>
+
+  <canvas id="c" width="700" height="580"></canvas>
+
+  <div id="overlay">
+    <h1>TANK CLASH</h1>
+    <div class="tagline">ONLINE PvP — CROSS DEVICE</div>
+
+    <div id="lobby">
+      <div id="win-msg"></div>
+      <div id="sub-msg"></div>
+
+      <div class="btn-row" id="main-btns">
+        <button class="big-btn red" onclick="hostGame()">🔴 HOST GAME</button>
+        <button class="big-btn blue" onclick="showJoin()">🔵 JOIN GAME</button>
+      </div>
+
+      <div class="code-box" id="code-box">
+        <div class="code-label">SHARE THIS CODE WITH YOUR OPPONENT</div>
+        <div class="room-code" id="room-code-display">——</div>
+        <div class="code-hint">Waiting for opponent to join...</div>
+      </div>
+
+      <div class="join-box" id="join-box">
+        <input id="code-input" maxlength="4" placeholder="CODE" oninput="this.value=this.value.toUpperCase()" />
+        <button class="big-btn blue" onclick="joinGame()">▶ JOIN</button>
+      </div>
+
+      <div id="status-msg"></div>
+      <div class="ctrl-hint">ARROW KEYS — MOVE &amp; ROTATE &nbsp;|&nbsp; L or SPACE — FIRE</div>
+    </div>
+  </div>
 </div>
+
 <script>
-// ── DB & Live Leaderboard ───────────────────────────────────────────────
-class PlayerDB {
-  async save(p) {
-    try {
-      localStorage.setItem(`sans_player_${p.username}`, JSON.stringify(p));
-    } catch (e) {}
-  }
-  async get(u) {
-    try {
-      const d = localStorage.getItem(`sans_player_${u}`);
-      return d ? JSON.parse(d) : null;
-    } catch (e) { return null; }
-  }
-  async getAll() {
-    try {
-      return Object.keys(localStorage)
-        .filter(k => k.startsWith('sans_player_'))
-        .map(k => JSON.parse(localStorage.getItem(k)))
-        .filter(p => p);
-    } catch (e) { return []; }
-  }
-}
-const db = new PlayerDB();
+// ═══════════════════════════════════════════════════════
+//  TANK CLASH ONLINE — WebRTC P2P via public STUN
+//  Uses PeerJS CDN for easy WebRTC signaling
+// ═══════════════════════════════════════════════════════
 
-// ✅ LIVE LEADERBOARD FROM YOUR GIST URL
-const GIST_URL = "https://gist.githubusercontent.com/yanxuangordon-code/60b9417fd172e13e64bdd9dc4d1e9ac6/raw/164b1d20ab0dfed204c5d9260f059477048a4f3a/leaderboard.json";
-let liveLeaderboard = [];
+// Dynamically load PeerJS
+const peerScript = document.createElement('script');
+peerScript.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
+document.head.appendChild(peerScript);
 
-async function fetchLeaderboard() {
-  try {
-    const res = await fetch(GIST_URL + '?t=' + Date.now());
-    if (!res.ok) throw new Error("Gist not found");
-    const data = await res.json();
-    liveLeaderboard = data.top3 || [];
-    renderLiveLeaderboard();
-  } catch (e) {
-    console.warn("Failed to load live leaderboard:", e);
-  }
-}
-function renderLiveLeaderboard() {
-  const el1 = document.getElementById('leaderboard');
-  const el2 = document.getElementById('leaderboardGameOver');
-  const render = (el) => {
-    if (!el) return;
-    let html = `<div class="lb-header">🌐 LIVE LEADERBOARD</div>`;
-    if (liveLeaderboard.length === 0) {
-      html += `<div style="color:#666; margin-top:10px; text-align:center;">Loading...</div>`;
-    } else {
-      liveLeaderboard.forEach((entry, i) => {
-        const isCurrent = currentPlayer?.username === entry.username;
-        html += `
-          <div class="lb-row ${isCurrent ? 'lb-highlight' : ''}">
-            <div class="lb-pos">${i+1}.</div>
-            <div class="lb-name">${entry.username}</div>
-            <div class="lb-char">${entry.character || '???'}</div>
-            <div class="lb-score">${entry.score}</div>
-          </div>
-        `;
-      });
-    }
-    el.innerHTML = html;
-  };
-  render(el1);
-  render(el2);
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ── Game constants ──────────────────────────────────────
+const MAX_HP    = 100;
+const MAX_WINS  = 5;
+const T_SPEED   = 2.8;
+const T_TURN    = 0.048;
+const B_SPEED   = 7;
+const B_BOUNCES = 2;
+const FIRE_CD   = 30;
+
+// ── State ───────────────────────────────────────────────
+let peer = null, conn = null;
+let myRole = null; // 'host' | 'guest'
+let gameActive = false;
+let wins = [0,0];
+let roomCode = '';
+
+let tanks, bullets, particles, shockwaves, walls;
+let roundTimer = 0, shakeFrames = 0;
+
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// Remote input state (what the other player is pressing)
+let remoteKeys = {};
+
+// ── Peer ID → Room code mapping ──────────────────────────
+function peerIdToCode(id) {
+  // Use last 4 chars of peer id, uppercase alphanumeric
+  return id.replace(/[^A-Z0-9]/gi,'').slice(-4).toUpperCase();
 }
 
-// ── Achievements (10) ──────────────────────────────────────────────────
-const ACHIEVEMENTS = [
-  { id: 'first_dodge', name: "First Dodge", desc: "Dodge your first bone" },
-  { id: '100_score', name: "Getting Started", desc: "Reach 100 score" },
-  { id: 'blue_master', name: "Blue Master", desc: "Use Blue Mode 10 times" },
-  { id: '30s_survivor', name: "Half-Minute Hero", desc: "Survive 30 seconds" },
-  { id: 'homing_survivor', name: "Homing Survivor", desc: "Survive a homing wave" },
-  { id: 'horizontal_dodger', name: "Needle Dodger", desc: "Dodge 20 horizontal homing bones" },
-  { id: 'undyne_freeze', name: "Time Bender", desc: "Use Undyne’s full freeze 5 times" },
-  { id: 'papyrus_puzzle', name: "Puzzle Master", desc: "Solve 10 Papyrus puzzles" },
-  { id: 'gaster_rift', name: "Chrono Weaver", desc: "Use Gaster’s Rift 5 times" },
-  { id: 'rainbow_soul', name: "Rainbow Warrior", desc: "Unlock Rainbow Soul with '676767'" }
-];
-function checkAchievements(p, run = {}) {
-  const u = [];
-  ACHIEVEMENTS.forEach(a => {
-    if (p.achievements.includes(a.id)) return;
-    let x = false;
-    switch (a.id) {
-      case 'first_dodge': x = p.totalDodges >= 1; break;
-      case '100_score': x = p.bestScore >= 100; break;
-      case 'blue_master': x = p.blueActivations >= 10; break;
-      case '30s_survivor': x = p.longestTime >= 30; break;
-      case 'homing_survivor': x = p.homingSurvived >= 1; break;
-      case 'horizontal_dodger': x = (run.horizontalDodged || 0) >= 20; break;
-      case 'undyne_freeze': x = (p.undyneFreezes || 0) >= 5; break;
-      case 'papyrus_puzzle': x = (p.papyrusPuzzles || 0) >= 10; break;
-      case 'gaster_rift': x = (p.gasterRifts || 0) >= 5; break;
-      case 'rainbow_soul': x = p.rainbowUnlocked || false; break;
-    }
-    if (x) {
-      p.achievements.push(a.id);
-      u.push(a.name);
-    }
+// ── Networking ───────────────────────────────────────────
+function hostGame() {
+  setStatus('Connecting to server...', 'wait');
+  document.getElementById('main-btns').style.display = 'none';
+
+  peerScript.onload = initHost;
+  if (window.Peer) initHost();
+}
+
+function initHost() {
+  peer = new Peer(undefined, {
+    host: 'peerjs.com', port: 443, secure: true, path: '/'
   });
-  return u;
-}
-function showAchievement(n) {
-  const e = document.createElement('div');
-  e.innerHTML = `🏆 <b>${n}</b>`;
-  Object.assign(e.style, {
-    position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-    background: '#aa55ff', color: 'white', padding: '10px 20px',
-    borderRadius: '6px', fontWeight: 'bold', zIndex: '100',
-    boxShadow: '0 0 10px #ff55ff', pointerEvents: 'none'
+
+  peer.on('open', id => {
+    roomCode = id;
+    document.getElementById('code-box').style.display = 'block';
+    document.getElementById('room-code-display').textContent = id.slice(-6).toUpperCase();
+    setStatus('Waiting for opponent...', 'wait');
   });
-  document.body.appendChild(e);
-  setTimeout(() => e.remove(), 2500);
-}
-function renderAchievements(p) {
-  if (!p || !p.achievements) return;
-  document.getElementById('achievementsList').innerHTML = ACHIEVEMENTS.map(a =>
-    `<div class="${p.achievements.includes(a.id) ? 'ach-unlocked' : 'ach-locked'}">
-      ${p.achievements.includes(a.id) ? '✅' : '🔒'} <b>${a.name}</b><br><small>${a.desc}</small>
-    </div>`
-  ).join('');
-}
 
-// ── Game State ─────────────────────────────────────────────────────────
-let gameState = 'auth', currentPlayer = null;
-const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'),
-screens = {
-  auth: document.getElementById('authScreen'),
-  custom: document.getElementById('customScreen'),
-  charSelect: document.getElementById('charSelectScreen'),
-  start: document.getElementById('startScreen'),
-  achievements: document.getElementById('achievementsScreen'),
-  gameOver: document.getElementById('gameOver')
-},
-usernameInput = document.getElementById('usernameInput'),
-displayName = document.getElementById('displayName'),
-statsEl = document.getElementById('stats'),
-finalScoreEl = document.getElementById('finalScore'),
-finalTimeEl = document.getElementById('finalTime'),
-finalDodgesEl = document.getElementById('finalDodges'),
-userListEl = document.getElementById('userList'),
-colorOptions = document.getElementById('colorOptions'),
-shapeOptions = document.getElementById('shapeOptions'),
-trailOptions = document.getElementById('trailOptions'),
-charOptions = document.getElementById('charOptions');
+  peer.on('connection', c => {
+    conn = c;
+    setupConn();
+    myRole = 'host';
+  });
 
-let hp = 10, time = 0, blueMode = false, blueTime = 0, soulX = 385, soulY = 285, soulSpeed = 420,
-keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false, Space: false, Z: false, G: false },
-bones = [], blasters = [], damagePopups = [], score = 0, dodges = 0, blueActivations = 0,
-homingWavesSurvived = 0, lasersDodged = 0, horizontalDodged = 0, nextAttackTime = 0, animationId = null, SPEED_MULT = 1.3;
-
-let blueTimeMult = 1.0,
-timeSlowActive = false, timeSlowCooldown = 0, timeSlowActiveDuration = 0,
-dodgeInvincibility = 0,
-friskSurge = false, friskSurgeTime = 0, friskDodgeCount = 0,
-sansKarma = 0, sansKarmaActive = false, sansKarmaTime = 0,
-papyrusPuzzleCooldown = 8, papyrusPuzzleActive = false,
-undyneFreeze = false, undyneSlowAfter = false,
-gasterRift = false, gasterSlowAfter = false, gasterCooldown = 0;
-
-let gasterMode = false, gasterDrainTimer = 10;
-let rainbowMode = false;
-let rainbowHue = 0;
-const rainbowParticles = [];
-const explosionParticles = [];
-const COLORS = { red: '#ff5555', blue: '#5588ff', green: '#55ff55', pink: '#ff55ff', yellow: '#ffff55', purple: '#aa55ff' };
-const SHAPES = ['square', 'circle', 'diamond', 'star'];
-const TRAILS = ['none', 'short', 'long'];
-const CHARACTERS = [
-  { id: 'frisk', name: "Frisk", desc: "Determination Surge: 10 dodges → +1 HP & 1.8× speed for 5s", color: '#55ff55' },
-  { id: 'sans', name: "Sans", desc: "Karmic Retribution: Every 5 dodges, next hit is harmless & boosts score", color: '#ff5555' },
-  { id: 'papyrus', name: "Papyrus", desc: "PAPYRUS PUZZLE: Every 8s, dodge a puzzle bone to freeze all bones for 2s", color: '#ffff55' },
-  { id: 'undyne', name: "Undyne", desc: "UNDYNE THE UNDYING: Z → 3s freeze, 2s slow, 6.7s CD", color: '#5588ff' },
-  { id: 'gaster', name: "Gaster", desc: "CHRONO RIFT: G → 2s full stop + score boost, 8s CD", color: '#8844aa' }
-];
-let selectedCharacter = 'frisk';
-let soulColor = 'red', soulShape = 'square', soulTrail = 'none';
-const trailHistory = [], MAX_TRAIL = 5;
-
-// ── Blaster & Attacks ──────────────────────────────────────────────────
-class Blaster {
-  constructor(x,y,a=0){this.x=x;this.y=y;this.angle=a;this.state='idle';this.timer=0;this.chargeTime=1.5;this.fireTime=0.2;this.cooldown=1.0}
-  update(dt){
-    this.timer += dt;
-    if(this.state==='idle'&&this.timer>1.0){this.state='charging';this.timer=0;}
-    else if(this.state==='charging'&&this.timer>this.chargeTime){this.state='firing';this.timer=0;
-      const r=this.angle*Math.PI/180,dx=Math.cos(r),dy=Math.sin(r);
-      bones.push({type:'laser',x:this.x+dx*30,y:this.y+dy*30,vx:dx*700*SPEED_MULT,vy:dy*700*SPEED_MULT,w:6,h:6,age:0,maxAge:0.8,color:'#ff5555'});}
-    else if(this.state==='firing'&&this.timer>this.fireTime){this.state='cooldown';this.timer=0;}
-    else if(this.state==='cooldown'&&this.timer>this.cooldown){this.state='idle';this.timer=0;}
-  }
-  draw(){
-    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle*Math.PI/180);ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
-    let s=6;
-    if(this.state==='charging'){const t=this.timer/this.chargeTime;s=6+9*t;ctx.fillStyle=`rgb(255,${100+155*t},${50+205*t})`;}
-    else if(this.state==='firing'){ctx.fillStyle='#ff5555';s=16;}
-    else{ctx.fillStyle='#fff';}
-    ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.fill();ctx.restore();
-  }
-}
-
-let homingWaveId = 0;
-function spawnVertical(){ for(let i=0,c=4+~~(Math.random()*3);i<c;i++) bones.push({type:'bone',x:50+Math.random()*700,y:-30,vx:0,vy:286*SPEED_MULT,w:20,h:40,color:'#ffffff'}); }
-function spawnHoming(){
-  homingWaveId++;
-  [0,2.094,4.188].forEach((a,i)=>{
-    const x=400+Math.cos(a)*40,y=-60+Math.sin(a)*40;
-    bones.push({type:'homing',x,y,vx:0,vy:0,targetX:soulX+15,targetY:soulY+15,maxSpeed:312*SPEED_MULT,acceleration:306*SPEED_MULT,w:24,h:24,color:'#ff55ff',pulse:0,age:0,maxAge:8.0,waveId:homingWaveId});
+  peer.on('error', e => {
+    setStatus('Connection error: ' + e.type, 'err');
+    document.getElementById('main-btns').style.display = 'flex';
   });
 }
-function spawnZigzag(){ for(let r=0;r<2;r++) for(let x=-80+(r%2)*200;x<880;x+=200) bones.push({type:'bone',x,y:120+r*160,vx:0,vy:0,w:70,h:8,oscillate:true,phase:r*Math.PI,amp:50,freq:2.6,color:'#55ff55'}); }
-function spawnConverge(){ for(let i=0;i<5;i++){ const a=i/5*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a); bones.push({type:'bone',x:400+dx*400,y:300+dy*400,vx:-dx*208*SPEED_MULT,vy:-dy*208*SPEED_MULT,w:70,h:8,color:'#ffff55'}); } }
-function spawnRapidPulse(){ for(let r=0;r<2;r++){ const rad=60+r*90; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2,x=400+Math.cos(a)*rad,y=300+Math.sin(a)*rad,dx=Math.cos(a),dy=Math.sin(a); bones.push({type:'bone',x:x-25*dx,y:y-25*dy,vx:dx*195*SPEED_MULT,vy:dy*195*SPEED_MULT,w:50,h:8,color:'#ffaa55'}); } } }
-function spawnHorizontalHoming(){
-  const count=3+~~(Math.random()*2);
-  for(let i=0;i<count;i++){
-    const fromLeft=Math.random()>0.5;
-    const x=fromLeft?-20:820;
-    const y=50+Math.random()*500;
-    bones.push({type:'horizontal_homing',x,y,vx:0,vy:0,targetX:soulX+15,targetY:soulY+15,maxSpeed:400*SPEED_MULT,acceleration:250*SPEED_MULT,w:12,h:8,color:'#ffff55',age:0,maxAge:3.0});
-  }
-}
-function spawnPuzzleBone() {
-  const dir = Math.random() > 0.5 ? 1 : -1;
-  const y = 50 + Math.random() * 500;
-  bones.push({type: 'puzzle',x: dir > 0 ? -30 : 830,y: y,vx: dir * 300 * SPEED_MULT,vy: 0,w: 50, h: 50,color: '#ffff55',age: 0, maxAge: 4.0});
-}
-function spawnAttack(){
-  const attacks=[spawnVertical,spawnHoming,spawnZigzag,spawnConverge,spawnHorizontalHoming];
-  if(time>30)attacks.push(spawnRapidPulse);
-  attacks[~~(Math.random()*attacks.length)]();
-  nextAttackTime=time+0.3+Math.random()*0.5;
+
+function showJoin() {
+  document.getElementById('main-btns').style.display = 'none';
+  document.getElementById('join-box').style.display  = 'flex';
+  document.getElementById('code-input').focus();
+  setStatus('Enter the host\'s code', '');
 }
 
-function drawStar(ctx, cx, cy, size, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  const or = size / 2, ir = size / 4;
-  for (let i = 0; i < 5; i++) {
-    const a1 = (i * 72 - 90) * Math.PI / 180;
-    const a2 = ((i + 0.5) * 72 - 90) * Math.PI / 180;
-    const x1 = cx + Math.cos(a1) * or;
-    const y1 = cy + Math.sin(a1) * or;
-    const x2 = cx + Math.cos(a2) * ir;
-    const y2 = cy + Math.sin(a2) * ir;
-    if (i === 0) ctx.moveTo(x1, y1);
-    else ctx.lineTo(x1, y1);
-    ctx.lineTo(x2, y2);
-  }
-  ctx.closePath();
-  ctx.fill();
+function joinGame() {
+  const code = document.getElementById('code-input').value.trim();
+  if (code.length < 4) { setStatus('Enter a valid code!', 'err'); return; }
+  setStatus('Connecting...', 'wait');
+
+  peerScript.onload = () => doJoin(code);
+  if (window.Peer) doJoin(code); else peerScript.onload = () => doJoin(code);
 }
 
-function drawSoul(){
-  const x=soulX,y=soulY,size=30;
-  let color = gasterMode ? '#ffffff' : (COLORS[soulColor]||'#ff5555');
-  if (rainbowMode) {
-    rainbowHue = (rainbowHue + 1.5) % 360;
-    const h = rainbowHue;
-    const s = 85 + 15 * Math.sin(performance.now()/180);
-    const l = 55 + 10 * Math.sin(performance.now()/250);
-    color = `hsl(${h}, ${s}%, ${l}%)`;
-    if (Math.random() < 0.4) {
-      rainbowParticles.push({
-        x: x + 15 + (Math.random()-0.5)*25,
-        y: y + 15 + (Math.random()-0.5)*25,
-        vx: (Math.random()-0.5)*50,
-        vy: (Math.random()-0.5)*50 - 20,
-        hue: h,
-        life: 1.2
-      });
-    }
-  }
-  if (friskSurge) color = '#55ffaa';
-  if (sansKarmaActive) color = '#ffaa55';
-  if (gasterRift) color = '#8844aa';
-  trailHistory.unshift({x:x+size/2,y:y+size/2});
-  if(trailHistory.length>MAX_TRAIL)trailHistory.pop();
-  if (rainbowMode && soulTrail !== 'none') {
-    const count = soulTrail === 'short' ? 4 : 6;
-    for(let i=1; i<Math.min(count, trailHistory.length); i++) {
-      const p = trailHistory[i];
-      const alpha = 1 - i/count * 0.7;
-      const scale = 1 - i/count * 0.4;
-      ctx.globalAlpha = alpha;
-      const h = (rainbowHue - i*25) % 360;
-      ctx.fillStyle = `hsl(${h}, 100%, 65%)`;
-      if(soulShape==='circle'){ctx.beginPath();ctx.arc(p.x,p.y,size/2*scale,0,Math.PI*2);ctx.fill();}
-      else if(soulShape==='diamond'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2*scale,-size/2*scale,size*scale,size*scale);ctx.restore();}
-      else if(soulShape==='star'){drawStar(ctx,p.x,p.y,size*scale,`hsl(${h}, 100%, 65%)`);}
-      else{ctx.fillRect(p.x-size/2*scale,p.y-size/2*scale,size*scale,size*scale);}
-    }
-    ctx.globalAlpha = 1;
-  } else if (soulTrail !== 'none') {
-    const count=soulTrail==='short'?3:5;
-    for(let i=1;i<Math.min(count,trailHistory.length);i++){
-      const p=trailHistory[i];
-      const alpha=1-i/count*0.7;
-      const scale=1-i/count*0.5;
-      ctx.globalAlpha=alpha;
-      ctx.fillStyle=color;
-      if(soulShape==='circle'){ctx.beginPath();ctx.arc(p.x,p.y,size/2*scale,0,Math.PI*2);ctx.fill();}
-      else if(soulShape==='diamond'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2*scale,-size/2*scale,size*scale,size*scale);ctx.restore();}
-      else if(soulShape==='star'){drawStar(ctx,p.x,p.y,size*scale,color);}
-      else{ctx.fillRect(p.x-size/2*scale,p.y-size/2*scale,size*scale,size*scale);}
-    }
-    ctx.globalAlpha=1;
-  }
-  ctx.strokeStyle=color;
-  ctx.lineWidth=2.5;
-  const fillStyle=gasterMode?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.15)';
-  ctx.fillStyle=fillStyle;
-  if(soulShape==='circle'){ctx.beginPath();ctx.arc(x+size/2,y+size/2,size/2,0,Math.PI*2);ctx.fill();ctx.stroke();}
-  else if(soulShape==='diamond'){ctx.save();ctx.translate(x+size/2,y+size/2);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2,-size/2,size,size);ctx.strokeRect(-size/2,-size/2,size,size);ctx.restore();}
-  else if(soulShape==='star'){drawStar(ctx,x+size/2,y+size/2,size,color);ctx.strokeStyle=color;ctx.lineWidth=2.5;drawStar(ctx,x+size/2,y+size/2,size,'rgba(0,0,0,0)');ctx.stroke();}
-  else{ctx.beginPath();ctx.rect(x,y,size,size);ctx.fill();ctx.stroke();}
-  if(gasterMode){ctx.fillStyle='#ff5555';ctx.font='bold 14px Courier New';ctx.fillText('G',x+size-10,y+18);}
-  if (dodgeInvincibility > 0) {
-    ctx.strokeStyle = '#ff55ff';ctx.lineWidth = 2;ctx.beginPath(); ctx.arc(x+15, y+15, 20, 0, Math.PI*2); ctx.stroke();
-  }
-  if (undyneFreeze || gasterRift) {
-    ctx.strokeStyle = undyneFreeze ? '#5588ff' : '#8844aa';
-    ctx.setLineDash([5,5]);ctx.lineWidth = 2;ctx.strokeRect(x-2, y-2, size+4, size+4);ctx.setLineDash([]);
-  }
-}
+function doJoin(code) {
+  peer   = new Peer(undefined, { host:'peerjs.com', port:443, secure:true, path:'/' });
+  myRole = 'guest';
 
-const QUOTES = {
-  dodgeStreak: ["heh. looks like you've got the hang of it.", "not bad. for a skeleton, i'm pretty fast, huh?", "you're getting better. scary."],
-  blueMode: ["bet you didn't see *that* coming.", "well. guess it's my turn.", "oops. did i do that?"],
-  homingDodge: ["nice dodge.", "you can run... but you can't hide.", "determination is impressive. useless, but impressive."],
-  lowHP: ["you're not looking so great there, pal.", "heya. you look tired.", "i wonder how many hp you have left?"],
-  death: ["you died.", "it's a beautiful day outside. birds are singing...", "well. here goes nothing."],
-  gasterOn: ["…determination detected.", "gaster mode: time slows on dodge. hp drains after 10s.", "type 'gaster' again to disable."],
-  surge: ["determination rising...", "you’re glowing!", "that’s the spirit."],
-  karma: ["karma’s a funny thing.", "whoops. my bad.", "did that hurt?"],
-  puzzle: ["nyeh heh heh! solve this!", "a puzzle for you!", "catch me if you can!"],
-  undyne: ["FEEL MY WRATH!", "UNDYNE THE UNDYING!", "I WON’T HOLD BACK!"],
-  gasterRift: ["...timeline fragmented.", "error: causality violation.", "restructuring spacetime..."],
-  rainbow: ["colors of determination...", "a spectrum of souls.", "rainbow... just like before."],
-  '800_reached': ["800? impressive.", "you’ve reached the threshold.", "the end draws near."],
-  'all_achievements': ["legendary. you’ve done it all.", "nothing left to prove.", "true pacifist status: confirmed."]
-};
-function sayQuote(type) {
-  const quote = QUOTES[type][Math.floor(Math.random() * QUOTES[type].length)];
-  const el = document.getElementById('sansQuote');
-  el.textContent = `"${quote}" — sans`;
-  el.style.opacity = '0';
-  setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '1'; }, 50);
-  setTimeout(() => { el.style.opacity = '0'; }, 5000);
-}
-
-function endGame() {
-  gameState = 'gameover';
-  cancelAnimationFrame(animationId);
-  
-  const finalScore = Math.floor(score);
-  const run = { finalHP: hp, blueUses: blueActivations, lasersDodged, horizontalDodged };
-  
-  if (currentPlayer) {
-    currentPlayer.bestScore = Math.max(currentPlayer.bestScore, finalScore);
-    currentPlayer.longestTime = Math.max(currentPlayer.longestTime, time);
-    currentPlayer.totalDodges += dodges;
-    currentPlayer.blueActivations += blueActivations;
-    currentPlayer.homingSurvived += homingWavesSurvived;
-    if (currentPlayer.undyneFreezes === undefined) currentPlayer.undyneFreezes = 0;
-    if (currentPlayer.papyrusPuzzles === undefined) currentPlayer.papyrusPuzzles = 0;
-    if (currentPlayer.gasterRifts === undefined) currentPlayer.gasterRifts = 0;
-    
-    checkAchievements(currentPlayer, run).forEach(showAchievement);
-    db.save(currentPlayer);
-    updateStatsUI();
-  }
-  
-  finalScoreEl.textContent = finalScore;
-  finalTimeEl.textContent = time.toFixed(1) + 's';
-  finalDodgesEl.textContent = dodges;
-  
-  hideAllScreens();
-  screens.gameOver.style.display = 'block';
-  fetchLeaderboard(); // Refresh leaderboard after death
-}
-
-function gameLoop(ts) {
-  if (gameState !== 'playing') return;
-  
-  const delta = Math.min(0.1, (ts - (lastTimestamp || ts)) / 1000);
-  lastTimestamp = ts;
-  time += delta;
-  score += 10 * delta;
-  
-  const timeScale = blueMode ? 0.5 : 1.0;
-  const dt = delta * timeScale;
-  
-  if (keys.Space && !keys.prevSpace) {
-    blueMode = !blueMode;
-    blueTime = blueMode ? 5 : 0;
-    if (blueMode) blueActivations++;
-    sayQuote('blueMode');
-  }
-  keys.prevSpace = keys.Space;
-  if (blueMode) blueTime = Math.max(0, blueTime - delta);
-  
-  const speed = soulSpeed * (blueMode ? 1.5 : 1);
-  if (keys.ArrowLeft) soulX = Math.max(0, soulX - speed * dt);
-  if (keys.ArrowRight) soulX = Math.min(770, soulX + speed * dt);
-  if (blueMode) {
-    if (keys.ArrowUp) soulY = Math.min(570, soulY + speed * dt);
-    if (keys.ArrowDown) soulY = Math.max(0, soulY - speed * dt);
-  } else {
-    if (keys.ArrowUp) soulY = Math.max(0, soulY - speed * dt);
-    if (keys.ArrowDown) soulY = Math.min(570, soulY + speed * dt);
-  }
-  
-  if (time >= nextAttackTime) spawnAttack();
-  blasters.forEach(b => b.update(dt));
-  
-  for (let i = bones.length - 1; i >= 0; i--) {
-    const b = bones[i];
-    let collided = false;
-    
-    if (b.type === 'homing' || b.type === 'horizontal_homing') {
-      b.targetX = soulX + 15; b.targetY = soulY + 15;
-      const dx = b.targetX - b.x, dy = b.targetY - b.y, dd = Math.sqrt(dx * dx + dy * dy);
-      if (dd > 1) {
-        const ax = (dx / dd) * b.acceleration * dt, ay = (dy / dd) * b.acceleration * dt;
-        b.vx += ax; b.vy += ay;
-        const sp = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-        if (sp > b.maxSpeed) { b.vx = (b.vx / sp) * b.maxSpeed; b.vy = (b.vy / sp) * b.maxSpeed; }
-      }
-      b.x += b.vx * dt; b.y += b.vy * dt;
-      if (b.type === 'homing') b.pulse = (b.pulse + dt * 10) % (Math.PI * 2);
-      b.age += dt;
-      if (b.type === 'homing' && b.age >= b.maxAge && b.waveId === homingWaveId) homingWavesSurvived++;
-      if (b.age >= b.maxAge) { bones.splice(i, 1); continue; }
-    }
-    else if (b.oscillate) b.x = 400 + Math.sin(time * b.freq + b.phase) * b.amp;
-    else b.x += b.vx * dt, b.y += b.vy * dt;
-    
-    const hit = soulX < b.x + b.w && soulX + 30 > b.x && soulY < b.y + b.h && soulY + 30 > b.y;
-    if (hit) {
-      hp--;
-      if (hp <= (rainbowMode ? 3 : 2)) sayQuote('lowHP');
-      damagePopups.push({ text: '-1', x: soulX + 15, y: soulY, age: 0, color: '#ff5555' });
-      collided = true;
-    } else {
-      dodges++;
-      if (b.type === 'laser') lasersDodged++;
-      if (b.type === 'horizontal_homing') {
-        horizontalDodged++;
-        if (horizontalDodged % 5 === 0) sayQuote('homingDodge');
-      }
-    }
-    
-    if ((b.type === 'laser' || b.type === 'horizontal_homing') && b.age > b.maxAge) bones.splice(i, 1);
-    else if (collided || (b.type !== 'homing' && b.type !== 'horizontal_homing' && (b.x < -200 || b.x > 1000 || b.y < -200 || b.y > 800))) bones.splice(i, 1);
-  }
-  
-  for (let i = damagePopups.length - 1; i >= 0; i--) {
-    damagePopups[i].age += delta;
-    damagePopups[i].y -= 70 * delta;
-    if (damagePopups[i].age > 1) damagePopups.splice(i, 1);
-  }
-  
-  if (score >= 800 && !currentPlayer?.trueEnding) {
-    triggerTrueEnding();
-    return;
-  }
-  
-  if (hp <= 0) {
-    sayQuote('death');
-    endGame();
-    return;
-  }
-  
-  // Render
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 800, 600);
-  bones.forEach(b => {
-    if (b.type === 'homing') {
-      const r = 12 + Math.sin(b.pulse * 1.2) * 4;
-      ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(b.x - 6, b.y - 2, 2, 0, Math.PI * 2); ctx.arc(b.x + 6, b.y - 2, 2, 0, Math.PI * 2); ctx.fill();
-    } else if (b.type === 'horizontal_homing') {
-      ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.w, b.h); // small yellow rectangle
-    } else {
-      ctx.fillStyle = b.color || '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
-    }
+  peer.on('open', () => {
+    conn = peer.connect(code, { reliable: false, serialization: 'json' });
+    setupConn();
   });
-  blasters.forEach(b => b.draw());
-  drawSoul();
-  
-  ctx.fillStyle = '#fff'; ctx.font = '18px Courier New'; ctx.fillText(`HP: ${hp.toFixed(1)}/10`, 20, 28); ctx.fillText(`SCORE: ${Math.floor(score)}`, 20, 52); ctx.fillText(`TIME: ${time.toFixed(1)}s`, 20, 76);
-  if (blueMode) { const w = (blueTime / 5) * 80; ctx.fillStyle = '#5588ff'; ctx.fillRect(20, 94, w, 6); ctx.strokeStyle = '#fff'; ctx.strokeRect(20, 94, 80, 6); }
-  if (gasterMode) { ctx.fillStyle = '#ff5555'; ctx.fillText(`GASTER ${gasterDrainTimer > 0 ? '(safe)' : '(draining)'}`, 20, 112); }
-  
-  ctx.textAlign = 'center'; damagePopups.forEach(p => { ctx.globalAlpha = Math.max(0, 1 - p.age); ctx.fillStyle = p.color; ctx.font = '22px Courier New'; ctx.fillText(p.text, p.x, p.y); }); ctx.globalAlpha = 1; ctx.textAlign = 'left';
-  
-  animationId = requestAnimationFrame(gameLoop);
-}
-let lastTimestamp = 0;
 
-function initGame() {
-  hp = 10; time = 0; blueMode = false; blueTime = 0; soulX = 385; soulY = 285;
-  score = 0; dodges = 0; blueActivations = 0; homingWavesSurvived = 0; lasersDodged = 0; horizontalDodged = 0;
-  bones = []; blasters = []; damagePopups = []; trailHistory.length = 0;
-  gasterMode = false; gasterDrainTimer = 10;
-  friskSurge = false; friskSurgeTime = 0; friskDodgeCount = 0;
-  sansKarma = 0; sansKarmaActive = false; sansKarmaTime = 0;
-  papyrusPuzzleCooldown = 8; papyrusPuzzleActive = false;
-  undyneFreeze = false; undyneSlowAfter = false; timeSlowCooldown = 0;
-  gasterRift = false; gasterSlowAfter = false; gasterCooldown = 0;
-  dodgeInvincibility = 0;
-  
-  const char = CHARACTERS.find(c => c.id === (currentPlayer?.character || 'frisk')) || CHARACTERS[0];
-  selectedCharacter = char.id;
-  hp = rainbowMode ? 15 : 10;
-  soulSpeed = rainbowMode ? 420 * 1.1 : 420;
-  SPEED_MULT = 1.3;
-  blueTimeMult = 1.0;
-  if (char.id === 'sans') blueTimeMult = 2.0;
-  if (char.id === 'papyrus') { hp = rainbowMode ? 15 : 12; SPEED_MULT *= 0.8; }
-  if (char.id === 'undyne') soulSpeed *= 1.2;
-  
-  blasters = [
-    new Blaster(180, 180),
-    new Blaster(620, 150, 25),
-    new Blaster(400, 480, -25)
-  ];
-  nextAttackTime = 0.5;
-  gameState = 'playing';
-  hideAllScreens();
-  lastTimestamp = performance.now();
-  animationId = requestAnimationFrame(gameLoop);
+  peer.on('error', e => {
+    setStatus('Could not connect — check the code!', 'err');
+    document.getElementById('main-btns').style.display = 'flex';
+    document.getElementById('join-box').style.display  = 'none';
+  });
 }
 
-function hideAllScreens() {
-  Object.values(screens).forEach(s => s.style.display = 'none');
-}
+function setupConn() {
+  conn.on('open', () => {
+    setStatus('CONNECTED ✓', 'ok');
+    updateConnStatus('ONLINE');
 
-function updateStatsUI() {
-  if (!currentPlayer) return;
-  displayName.textContent = currentPlayer.username;
-  statsEl.innerHTML = `
-    <div class="stat">🎭 Character: <span class="highlight">${CHARACTERS.find(c=>c.id===currentPlayer.character)?.name || 'Frisk'}</span></div>
-    <div class="stat">🏆 Best Score: <span class="highlight">${currentPlayer.bestScore}</span></div>
-    <div class="stat">⏱️ Longest Run: <span class="highlight">${currentPlayer.longestTime.toFixed(1)}s</span></div>
-    <div class="stat">🎯 Total Dodges: <span class="highlight">${currentPlayer.totalDodges.toLocaleString()}</span></div>
-    ${currentPlayer.trueEnding ? '<div class="stat">👑 True Ending: <span class="highlight">UNLOCKED</span></div>' : ''}
-  `;
-  renderAchievements(currentPlayer);
-}
-
-async function refreshUsers() {
-  try {
-    const players = await db.getAll();
-    userListEl.innerHTML = players.length ? 
-      players.map(p => `<div class="user-item" data-username="${p.username}">→ ${p.username}</div>`).join('') :
-      '<div>No players</div>';
-    userListEl.addEventListener('click', (e) => {
-      if (e.target.classList.contains('user-item')) {
-        const username = e.target.dataset.username;
-        loadPlayer(username, false);
-      }
-    });
-  } catch (e) {
-    userListEl.innerHTML = '<div>Load failed</div>';
-  }
-}
-
-async function loadPlayer(username, forceNew = false) {
-  try {
-    if (!username?.trim()) return;
-    username = username.trim().slice(0, 16);
-    let player = forceNew ? null : await db.get(username);
-    if (!player) {
-      player = {
-        username, bestScore: 0, longestTime: 0, totalDodges: 0,
-        blueActivations: 0, homingSurvived: 0, achievements: [],
-        soulColor: 'red', soulShape: 'square', soulTrail: 'none',
-        character: 'frisk', createdAt: Date.now()
-      };
-    }
-    currentPlayer = player;
-    soulColor = player.soulColor || 'red';
-    soulShape = player.soulShape || 'square';
-    soulTrail = player.soulTrail || 'none';
-    selectedCharacter = player.character || 'frisk';
-    trailHistory.length = 0;
-    rainbowMode = player.rainbowUnlocked || false;
-    updateStatsUI();
-    db.renderLeaderboard();
+    // Small delay then start
     setTimeout(() => {
-      hideAllScreens();
-      renderCustomScreen();
-      screens.custom.style.display = 'block';
-      gameState = 'custom';
-    }, 0);
-  } catch (e) {
-    alert("Load failed. Try again.");
+      document.getElementById('overlay').style.display = 'none';
+      startRound();
+    }, 800);
+  });
+
+  conn.on('data', handleRemoteData);
+
+  conn.on('close', () => {
+    setStatus('Opponent disconnected', 'err');
+    updateConnStatus('OFFLINE');
+    gameActive = false;
+    document.getElementById('overlay').style.display = 'flex';
+  });
+
+  conn.on('error', e => { console.warn('conn error', e); });
+}
+
+function sendData(obj) {
+  if (conn && conn.open) {
+    try { conn.send(obj); } catch(e) {}
   }
 }
 
-function renderCustomScreen() {
-  colorOptions.innerHTML = '';
-  Object.keys(COLORS).forEach(key => {
-    const div = document.createElement('div');
-    div.className = 'color-opt' + (soulColor === key ? ' selected' : '');
-    div.style.backgroundColor = COLORS[key];
-    div.dataset.value = key;
-    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-    div.addEventListener('click', () => {
-      document.querySelectorAll('.color-opt').forEach(d => d.classList.remove('selected'));
-      div.classList.add('selected');
-      soulColor = key;
-    });
-    colorOptions.appendChild(div);
-  });
-  shapeOptions.innerHTML = '';
-  SHAPES.forEach(key => {
-    const div = document.createElement('div');
-    div.className = 'shape-opt' + (soulShape === key ? ' selected' : '');
-    div.dataset.value = key;
-    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-    div.addEventListener('click', () => {
-      document.querySelectorAll('.shape-opt').forEach(d => d.classList.remove('selected'));
-      div.classList.add('selected');
-      soulShape = key;
-    });
-    shapeOptions.appendChild(div);
-  });
-  trailOptions.innerHTML = '';
-  TRAILS.forEach(key => {
-    const div = document.createElement('div');
-    div.className = 'trail-opt' + (soulTrail === key ? ' selected' : '');
-    div.dataset.value = key;
-    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-    div.addEventListener('click', () => {
-      document.querySelectorAll('.trail-opt').forEach(d => d.classList.remove('selected'));
-      div.classList.add('selected');
-      soulTrail = key;
-    });
-    trailOptions.appendChild(div);
-  });
-}
+// ── Remote data handler ──────────────────────────────────
+function handleRemoteData(data) {
+  if (!data) return;
 
-function showStartScreen() {
-  updateStatsUI();
-  hideAllScreens();
-  screens.start.style.display = 'block';
-  gameState = 'menu';
-  fetchLeaderboard(); // Refresh leaderboard on start
-}
-
-function showCustomScreen() {
-  updateStatsUI();
-  hideAllScreens();
-  renderCustomScreen();
-  screens.custom.style.display = 'block';
-  gameState = 'custom';
-}
-
-function showCharSelectScreen() {
-  updateStatsUI();
-  hideAllScreens();
-  renderCharSelectScreen();
-  screens.charSelect.style.display = 'block';
-  gameState = 'charSelect';
-}
-
-function showAchievementsScreen() {
-  updateStatsUI();
-  hideAllScreens();
-  screens.achievements.style.display = 'block';
-}
-
-// ── Events ─────────────────────────────────────────────────────────────
-document.getElementById('loginBtn').addEventListener('click', () => loadPlayer(usernameInput.value, false));
-document.getElementById('newPlayerBtn').addEventListener('click', () => loadPlayer(usernameInput.value, true));
-document.getElementById('saveCustomBtn').addEventListener('click', () => {
-  if (currentPlayer) {
-    currentPlayer.soulColor = soulColor;
-    currentPlayer.soulShape = soulShape;
-    currentPlayer.soulTrail = soulTrail;
-    db.save(currentPlayer);
+  if (data.type === 'keys') {
+    remoteKeys = data.keys;
   }
-  showCharSelectScreen();
-});
-document.getElementById('skipCustomBtn').addEventListener('click', showCharSelectScreen);
-document.getElementById('confirmCharBtn').addEventListener('click', () => {
-  if (currentPlayer) {
-    currentPlayer.character = selectedCharacter;
-    db.save(currentPlayer);
+
+  if (data.type === 'state' && myRole === 'guest') {
+    // Host sends authoritative game state
+    applyRemoteState(data);
   }
-  showStartScreen();
-});
-document.getElementById('backToCustomBtn').addEventListener('click', showCustomScreen);
-document.getElementById('startBtn').addEventListener('click', initGame);
-document.getElementById('retryBtn').addEventListener('click', () => {
-  hideAllScreens(); // ✅ Fixes replay
-  initGame();
-});
-document.getElementById('changeCharBtn').addEventListener('click', showCharSelectScreen);
-document.getElementById('switchPlayerBtn').addEventListener('click', () => {
-  hideAllScreens();
-  screens.auth.style.display = 'block';
-  gameState = 'auth';
-});
-document.getElementById('menuBtn').addEventListener('click', showStartScreen);
-document.getElementById('achievementsBtn').addEventListener('click', showAchievementsScreen);
-document.getElementById('backToStartBtn').addEventListener('click', showStartScreen);
 
-window.addEventListener('keydown', e => {
-  if (e.key in keys) keys[e.key] = true;
-  if (e.key === ' ') { keys.Space = true; e.preventDefault(); }
-  if (e.key === 'z' || e.key === 'Z') { keys.Z = true; }
-  if (e.key === 'g' || e.key === 'G') { keys.G = true; }
-});
-window.addEventListener('keyup', e => {
-  if (e.key in keys) keys[e.key] = false;
-  if (e.key === ' ') { keys.Space = false; e.preventDefault(); }
-  if (e.key === 'z' || e.key === 'Z') { keys.Z = false; }
-  if (e.key === 'g' || e.key === 'G') { keys.G = false; }
-});
+  if (data.type === 'round_end') {
+    wins = data.wins;
+    gameActive = false;
+    updateHUD();
+    showRoundEnd(data.winner);
+  }
 
-// Init
-fetchLeaderboard();
-refreshUsers();
+  if (data.type === 'next_round') {
+    startRound();
+  }
+}
+
+// ── Game state sync (host is authoritative) ──────────────
+let stateTickCounter = 0;
+function syncState() {
+  if (myRole !== 'host' || !conn || !conn.open) return;
+  stateTickCounter++;
+  // Send full state every 2 frames for smoothness
+  if (stateTickCounter % 2 !== 0) return;
+
+  sendData({
+    type: 'state',
+    tanks: tanks.map(t => ({
+      x:t.x, y:t.y, angle:t.angle, hp:t.hp, alive:t.alive,
+      vx:t.vx, vy:t.vy, invuln:t.invuln
+    })),
+    bullets: bullets.map(b => ({x:b.x, y:b.y, vx:b.vx, vy:b.vy, owner:b.owner, color:b.color, glow:b.glow})),
+    particles: particles.slice(0,60).map(p => ({x:p.x,y:p.y,color:p.color,r:p.r,life:p.life})),
+    shockwaves: shockwaves.map(s => ({x:s.x,y:s.y,r:s.r,life:s.life,color:s.color})),
+  });
+}
+
+function applyRemoteState(data) {
+  if (!tanks) return;
+  // Smoothly interpolate tank positions
+  data.tanks.forEach((rt, i) => {
+    if (!tanks[i]) return;
+    tanks[i].x     = lerp(tanks[i].x, rt.x, 0.3);
+    tanks[i].y     = lerp(tanks[i].y, rt.y, 0.3);
+    tanks[i].angle = lerpAngle(tanks[i].angle, rt.angle, 0.3);
+    tanks[i].hp    = rt.hp;
+    tanks[i].alive = rt.alive;
+    tanks[i].invuln= rt.invuln;
+  });
+  bullets    = data.bullets    || [];
+  shockwaves = data.shockwaves || [];
+}
+
+function lerp(a, b, t)      { return a + (b - a) * t; }
+function lerpAngle(a, b, t) {
+  let d = b - a;
+  while (d > Math.PI)  d -= Math.PI*2;
+  while (d < -Math.PI) d += Math.PI*2;
+  return a + d * t;
+}
+
+// ── Map ──────────────────────────────────────────────────
+function buildWalls() {
+  walls = [
+    {x:0,y:0,w:700,h:14}, {x:0,y:566,w:700,h:14},
+    {x:0,y:0,w:14,h:580}, {x:686,y:0,w:14,h:580},
+    {x:160,y:110,w:110,h:22}, {x:430,y:110,w:110,h:22},
+    {x:310,y:210,w:22,h:130}, {x:110,y:280,w:150,h:22},
+    {x:440,y:280,w:150,h:22}, {x:160,y:430,w:110,h:22},
+    {x:430,y:430,w:110,h:22}, {x:290,y:350,w:120,h:22},
+  ];
+}
+
+function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh) {
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+// ── Tank / game init ─────────────────────────────────────
+function makeTank(x,y,angle,color,glow,id) {
+  return {x,y,angle,color,glow,id, hp:MAX_HP, shootTimer:0,
+          alive:true, vx:0,vy:0, trail:[], invuln:0};
+}
+
+function startRound() {
+  buildWalls();
+  bullets=[]; particles=[]; shockwaves=[];
+  // P1 (host/red) left side, P2 (guest/blue) right side
+  tanks = [
+    makeTank(80,  290, 0,       '#ff4040','#ff8888', 0),
+    makeTank(620, 290, Math.PI, '#40c8ff','#88e0ff', 1),
+  ];
+  roundTimer = 0;
+  gameActive = true;
+  updateHUD();
+}
+
+// ── Shooting ─────────────────────────────────────────────
+function shoot(tank) {
+  if (!tank.alive || tank.shootTimer > 0) return;
+  tank.shootTimer = FIRE_CD;
+  bullets.push({
+    x: tank.x + Math.cos(tank.angle)*22,
+    y: tank.y + Math.sin(tank.angle)*22,
+    vx: Math.cos(tank.angle)*B_SPEED,
+    vy: Math.sin(tank.angle)*B_SPEED,
+    owner: tank.id, color: tank.color, glow: tank.glow, bounces: 0
+  });
+  tank.vx -= Math.cos(tank.angle)*1.5;
+  tank.vy -= Math.sin(tank.angle)*1.5;
+}
+
+function bulletHitsWall(b) {
+  for (const w of walls) {
+    if (b.x>w.x && b.x<w.x+w.w && b.y>w.y && b.y<w.y+w.h) return w;
+  }
+  return null;
+}
+
+function tankInWall(t) {
+  for (const w of walls) {
+    if (rectsOverlap(t.x-14,t.y-12,28,24, w.x,w.y,w.w,w.h)) return w;
+  }
+  return null;
+}
+
+// ── Particles ─────────────────────────────────────────────
+function spawnParticles(x,y,color,count,speed) {
+  speed=speed||4;
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*speed+1;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+                    life:1,decay:Math.random()*0.03+0.015,r:Math.random()*3+1,color});
+  }
+}
+
+function spawnShockwave(x,y,color) {
+  shockwaves.push({x,y,r:4,maxR:60,life:1,color});
+}
+
+// ── Update (host only runs physics) ─────────────────────
+function update() {
+  roundTimer++;
+
+  // Determine which tank each player controls
+  const myIdx     = myRole === 'host' ? 0 : 1;
+  const remoteIdx = myRole === 'host' ? 1 : 0;
+  const myTank     = tanks[myIdx];
+  const remoteTank = tanks[remoteIdx];
+
+  // My input
+  const myLeft  = myRole === 'host' ? keys['KeyA']     : keys['ArrowLeft'];
+  const myRight = myRole === 'host' ? keys['KeyD']     : keys['ArrowRight'];
+  const myFwd   = myRole === 'host' ? keys['KeyW']     : keys['ArrowUp'];
+  const myBack  = myRole === 'host' ? keys['KeyS']     : keys['ArrowDown'];
+  const myFire  = myRole === 'host' ? (keys['KeyF']||keys['Space']) : (keys['KeyL']||keys['Space']);
+
+  // Send my keys to peer
+  sendData({ type:'keys', keys:{
+    left: myLeft, right: myRight, fwd: myFwd, back: myBack, fire: myFire
+  }});
+
+  // Remote input
+  const rLeft  = remoteKeys['left'];
+  const rRight = remoteKeys['right'];
+  const rFwd   = remoteKeys['fwd'];
+  const rBack  = remoteKeys['back'];
+  const rFire  = remoteKeys['fire'];
+
+  // Apply to tanks (host runs full physics)
+  if (myRole === 'host') {
+    applyInput(myTank,     myLeft, myRight, myFwd, myBack, myFire);
+    applyInput(remoteTank, rLeft,  rRight,  rFwd,  rBack,  rFire);
+    updatePhysics();
+    syncState();
+  } else {
+    // Guest: apply input locally for responsiveness, server corrects
+    applyInput(myTank, myLeft, myRight, myFwd, myBack, myFire);
+  }
+
+  // Particles always run locally for smoothness
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy;
+    p.vx*=0.91; p.vy*=0.91;
+    p.life-=p.decay;
+    if(p.life<=0) particles.splice(i,1);
+  }
+  for(let i=shockwaves.length-1;i>=0;i--){
+    const s=shockwaves[i];
+    s.r+=(s.maxR-s.r)*0.18; s.life-=0.055;
+    if(s.life<=0) shockwaves.splice(i,1);
+  }
+}
+
+function applyInput(t, left, right, fwd, back, fire) {
+  if (!t.alive) return;
+  if (left)  t.angle -= T_TURN;
+  if (right) t.angle += T_TURN;
+  if (fwd)   { t.vx+=Math.cos(t.angle)*0.5; t.vy+=Math.sin(t.angle)*0.5; }
+  if (back)  { t.vx-=Math.cos(t.angle)*0.3; t.vy-=Math.sin(t.angle)*0.3; }
+  if (fire)  shoot(t);
+}
+
+function updatePhysics() {
+  // Move tanks
+  for (const t of tanks) {
+    if (!t.alive) continue;
+    t.vx*=0.83; t.vy*=0.83;
+    const spd=Math.hypot(t.vx,t.vy);
+    if(spd>T_SPEED){t.vx=t.vx/spd*T_SPEED; t.vy=t.vy/spd*T_SPEED;}
+    const px=t.x,py=t.y;
+    t.x+=t.vx; if(tankInWall(t)){t.x=px;t.vx*=-0.3;}
+    t.y+=t.vy; if(tankInWall(t)){t.y=py;t.vy*=-0.3;}
+    t.trail.unshift({x:t.x,y:t.y});
+    if(t.trail.length>16) t.trail.pop();
+    if(t.shootTimer>0) t.shootTimer--;
+    if(t.invuln>0)     t.invuln--;
+  }
+
+  // Move bullets
+  for (let i=bullets.length-1;i>=0;i--) {
+    const b=bullets[i];
+    b.x+=b.vx; b.y+=b.vy;
+    const hw=bulletHitsWall(b);
+    if(hw){
+      if(b.bounces>=B_BOUNCES){spawnParticles(b.x,b.y,b.color,6,2);bullets.splice(i,1);continue;}
+      b.bounces++;
+      const dx=(b.x-(hw.x+hw.w/2))/hw.w, dy=(b.y-(hw.y+hw.h/2))/hw.h;
+      if(Math.abs(dx)>Math.abs(dy)) b.vx*=-1; else b.vy*=-1;
+      spawnParticles(b.x,b.y,b.color,5,2);
+      continue;
+    }
+    let hit=false;
+    for(const t of tanks){
+      if(!t.alive||b.owner===t.id||t.invuln>0) continue;
+      if(Math.hypot(b.x-t.x,b.y-t.y)<18){
+        t.hp-=20; t.invuln=14;
+        spawnParticles(b.x,b.y,t.color,20,5);
+        spawnShockwave(b.x,b.y,t.color);
+        shakeFrames=9;
+        bullets.splice(i,1); hit=true;
+        if(t.hp<=0){t.hp=0;t.alive=false;killTank(t);}
+        updateHUD();
+        break;
+      }
+    }
+    if(!hit&&(b.x<0||b.x>W||b.y<0||b.y>H)) bullets.splice(i,1);
+  }
+}
+
+function killTank(t) {
+  spawnParticles(t.x,t.y,t.color,45,7);
+  spawnShockwave(t.x,t.y,t.color);
+  const winner = t.id===0?1:0;
+  wins[winner]++;
+  gameActive = false;
+  updateHUD();
+
+  if (myRole === 'host') {
+    sendData({ type:'round_end', winner, wins });
+    setTimeout(() => showRoundEnd(winner), 950);
+  }
+}
+
+function showRoundEnd(winner) {
+  const isChamp = wins[winner] >= MAX_WINS;
+  const names   = ['PLAYER 1','PLAYER 2'];
+  const colors  = ['#ff4040','#40c8ff'];
+  const winMsg  = document.getElementById('win-msg');
+  const subMsg  = document.getElementById('sub-msg');
+  const overlay = document.getElementById('overlay');
+
+  winMsg.style.display = 'block';
+  subMsg.style.display = 'block';
+  winMsg.style.color = colors[winner];
+  winMsg.style.textShadow = `0 0 28px ${colors[winner]}`;
+  winMsg.textContent = isChamp ? `🏆 ${names[winner]} WINS!` : `${names[winner]} TAKES THE ROUND`;
+  subMsg.textContent = isChamp ? 'CHAMPION OF THE ARENA' : `SCORE:  ${wins[0]} — ${wins[1]}`;
+
+  if (isChamp) wins=[0,0];
+
+  // Show a "next round" button (host triggers)
+  const btn = document.createElement('button');
+  btn.className = 'big-btn gold';
+  btn.style.marginTop = '4px';
+  btn.textContent = isChamp ? '⚔ NEW GAME' : '▶ NEXT ROUND';
+  btn.onclick = () => {
+    btn.remove();
+    winMsg.style.display='none';
+    subMsg.style.display='none';
+    overlay.style.display='none';
+    if (myRole==='host') {
+      sendData({type:'next_round'});
+    }
+    startRound();
+  };
+
+  // Only host can click it; guest auto-starts on recv
+  if (myRole === 'guest') {
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+    btn.textContent += ' (waiting for host)';
+  }
+
+  document.getElementById('lobby').appendChild(btn);
+  overlay.style.display = 'flex';
+}
+
+function updateHUD() {
+  if(!tanks) return;
+  document.getElementById('hp1').style.width=Math.max(0,tanks[0].hp)+'%';
+  document.getElementById('hp2').style.width=Math.max(0,tanks[1].hp)+'%';
+  document.getElementById('score-display').textContent=`${wins[0]} — ${wins[1]}`;
+  // Label by role
+  if(myRole==='host'){
+    document.getElementById('p1name').textContent='▶ YOU';
+    document.getElementById('p2name').textContent='OPPONENT ◀';
+  } else {
+    document.getElementById('p1name').textContent='▶ OPPONENT';
+    document.getElementById('p2name').textContent='YOU ◀';
+  }
+}
+
+function updateConnStatus(s) {
+  const el=document.getElementById('conn-status');
+  el.textContent=s;
+  el.style.color=s==='ONLINE'?'#4f4':'#f44';
+}
+
+function setStatus(msg,type) {
+  const el=document.getElementById('status-msg');
+  el.textContent=msg;
+  el.className=type||'';
+}
+
+// ── Draw ─────────────────────────────────────────────────
+function drawArena() {
+  ctx.fillStyle='#0c0c18'; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.globalAlpha=0.025; ctx.strokeStyle='#fff'; ctx.lineWidth=0.5;
+  const hs=30;
+  for(let row=0;row*hs*1.5<H+hs*2;row++)
+    for(let col=0;col*hs*1.73<W+hs*2;col++){
+      const cx=col*hs*1.73+(row%2)*hs*0.865, cy=row*hs*1.5;
+      ctx.beginPath();
+      for(let k=0;k<6;k++){
+        const a=(Math.PI/3)*k-Math.PI/6;
+        k===0?ctx.moveTo(cx+hs*Math.cos(a),cy+hs*Math.sin(a))
+             :ctx.lineTo(cx+hs*Math.cos(a),cy+hs*Math.sin(a));
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+  ctx.restore();
+}
+
+function drawWalls() {
+  for(const w of walls){
+    const g=ctx.createLinearGradient(w.x,w.y,w.x,w.y+w.h);
+    g.addColorStop(0,'#22223a'); g.addColorStop(1,'#111120');
+    ctx.fillStyle=g; ctx.fillRect(w.x,w.y,w.w,w.h);
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    ctx.strokeRect(w.x+.5,w.y+.5,w.w-1,w.h-1);
+    ctx.fillStyle='rgba(255,255,255,0.04)';
+    ctx.fillRect(w.x+1,w.y+1,w.w-2,Math.min(5,w.h-2));
+  }
+}
+
+function drawTank(t) {
+  ctx.save();
+  for(let i=t.trail.length-1;i>=0;i--){
+    const alpha=(1-i/t.trail.length)*0.14;
+    ctx.beginPath();
+    ctx.arc(t.trail[i].x,t.trail[i].y,11*(1-i/t.trail.length),0,Math.PI*2);
+    ctx.fillStyle=t.color+Math.floor(alpha*255).toString(16).padStart(2,'0');
+    ctx.fill();
+  }
+  if(t.invuln>0&&Math.floor(roundTimer/3)%2===0){ctx.restore();return;}
+  ctx.translate(t.x,t.y); ctx.rotate(t.angle);
+  ctx.shadowColor=t.color; ctx.shadowBlur=20;
+  ctx.fillStyle=t.color; ctx.beginPath(); ctx.roundRect(-15,-12,30,24,4); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.roundRect(-15,-12,30,24,4); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.roundRect(-13,-10,26,10,3); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(-5,-12); ctx.lineTo(-5,12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(5,-12); ctx.lineTo(5,12); ctx.stroke();
+  ctx.shadowColor=t.glow; ctx.shadowBlur=12;
+  ctx.fillStyle=t.color; ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(-2,-2,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=t.glow; ctx.shadowBlur=10; ctx.fillRect(7,-3.5,20,7);
+  ctx.fillStyle='#fff'; ctx.shadowBlur=18; ctx.fillRect(25,-2.5,4,5);
+  ctx.shadowBlur=0; ctx.fillStyle='rgba(0,0,0,0.65)';
+  [-8,0,8].forEach(x=>{ctx.fillRect(x-3.5,-16,7,5);ctx.fillRect(x-3.5,11,7,5);});
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  [-8,0,8].forEach(x=>{ctx.fillRect(x-3,-15.5,6,2);ctx.fillRect(x-3,11.5,6,2);});
+  ctx.restore();
+
+  // "YOU" label above your tank
+  const myIdx = myRole==='host'?0:1;
+  if(t.id===myIdx){
+    ctx.save();
+    ctx.font='bold 11px VT323,monospace';
+    ctx.fillStyle=t.glow; ctx.textAlign='center';
+    ctx.shadowColor=t.glow; ctx.shadowBlur=8;
+    ctx.fillText('YOU',t.x,t.y-34);
+    ctx.restore();
+  }
+}
+
+function drawBullets() {
+  for(const b of bullets){
+    ctx.save();
+    const g=ctx.createLinearGradient(b.x-b.vx*6,b.y-b.vy*6,b.x,b.y);
+    g.addColorStop(0,'transparent'); g.addColorStop(1,b.color+'cc');
+    ctx.strokeStyle=g; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(b.x-b.vx*6,b.y-b.vy*6); ctx.lineTo(b.x,b.y); ctx.stroke();
+    ctx.shadowColor=b.glow; ctx.shadowBlur=16;
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(b.x,b.y,4.5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=b.color; ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawParticles() {
+  for(const p of particles){
+    ctx.save(); ctx.globalAlpha=p.life;
+    ctx.shadowColor=p.color; ctx.shadowBlur=9; ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawShockwaves() {
+  for(const s of shockwaves){
+    ctx.save(); ctx.globalAlpha=s.life*0.7;
+    ctx.strokeStyle=s.color; ctx.shadowColor=s.color; ctx.shadowBlur=14; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=s.life*0.12; ctx.fillStyle=s.color; ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawHP() {
+  if(!tanks) return;
+  for(const t of tanks){
+    if(!t.alive) continue;
+    const bw=44,bh=6,bx=t.x-bw/2,by=t.y-30;
+    ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(bx-1,by-1,bw+2,bh+2);
+    const pct=t.hp/MAX_HP;
+    const bc=pct>0.5?t.color:pct>0.25?'#ffaa00':'#ff2020';
+    ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle=bc; ctx.shadowColor=bc; ctx.shadowBlur=8;
+    ctx.fillRect(bx,by,bw*pct,bh); ctx.shadowBlur=0;
+  }
+}
+
+function drawIdleScreen() {
+  ctx.fillStyle='#0c0c18'; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.globalAlpha=0.02; ctx.strokeStyle='#fff'; ctx.lineWidth=0.5;
+  const hs=30;
+  for(let row=0;row*hs*1.5<H+hs*2;row++)
+    for(let col=0;col*hs*1.73<W+hs*2;col++){
+      const cx=col*hs*1.73+(row%2)*hs*0.865,cy=row*hs*1.5;
+      ctx.beginPath();
+      for(let k=0;k<6;k++){const a=(Math.PI/3)*k-Math.PI/6;k===0?ctx.moveTo(cx+hs*Math.cos(a),cy+hs*Math.sin(a)):ctx.lineTo(cx+hs*Math.cos(a),cy+hs*Math.sin(a));}
+      ctx.closePath(); ctx.stroke();
+    }
+  ctx.restore();
+}
+
+// ── Game Loop ─────────────────────────────────────────────
+function loop() {
+  if (gameActive && tanks) {
+    update();
+    ctx.save();
+    if(shakeFrames>0){
+      ctx.translate((Math.random()-.5)*shakeFrames*.9,(Math.random()-.5)*shakeFrames*.9);
+      shakeFrames--;
+    }
+    drawArena(); drawShockwaves(); drawWalls();
+    drawParticles(); drawBullets();
+    for(const t of tanks){if(t.alive)drawTank(t);}
+    drawHP();
+    ctx.restore();
+  } else {
+    drawIdleScreen();
+    // animate a demo tank on menu
+    if(!tanks) {
+      buildWalls();
+      tanks=[makeTank(80,290,0,'#ff4040','#ff8888',0),makeTank(620,290,Math.PI,'#40c8ff','#88e0ff',1)];
+      bullets=[]; particles=[]; shockwaves=[];
+    }
+    drawWalls();
+    for(const t of tanks){drawTank(t);}
+  }
+  requestAnimationFrame(loop);
+}
+
+// Round timer counter for idle animation
+setInterval(()=>{if(!gameActive)roundTimer++;},16);
+
+loop();
 </script>
 </body>
 </html>
