@@ -1,1988 +1,1047 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gordon's Smart Brain</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
-      background-size: 400% 400%;
-      animation: gradientMove 15s ease infinite;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .chat-container {
-      background: white;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .chat-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 25px 30px;
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      animation: gradientShift 3s ease infinite;
-    }
-
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    .chat-header .subtitle {
-      font-size: 14px;
-      opacity: 0.95;
-      margin-top: 5px;
-      font-weight: normal;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.95; }
-      50% { opacity: 1; }
-    }
-
-    .feature-buttons {
-      display: flex;
-      gap: 4px;
-      padding: 5px 12px;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e0e0e0;
-      overflow-x: auto;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .feature-btn {
-      padding: 4px 8px;
-      background: white;
-      border: 1px solid #667eea;
-      color: #667eea;
-      border-radius: 12px;
-      font-size: 9px;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      white-space: nowrap;
-      font-weight: 600;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    .feature-btn:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(102, 126, 234, 0.4);
-      border-color: transparent;
-    }
-
-    .feature-btn:active {
-      transform: translateY(0);
-    }
-
-    .feature-btn.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-color: transparent;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 30px;
-      background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
-    }
-
-    .chat-messages::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .chat-messages::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 10px;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb:hover {
-      background: #764ba2;
-    }
-
-    .message {
-      margin-bottom: 20px;
-      display: flex;
-      animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .message.user {
-      justify-content: flex-end;
-    }
-
-    .message-content {
-      max-width: 75%;
-      padding: 14px 18px;
-      border-radius: 20px;
-      word-wrap: break-word;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: all 0.2s;
-      line-height: 1.6;
-    }
-
-    .message-content:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-
-    .message.user .message-content {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      margin-left: auto;
-    }
-
-    .message.assistant .message-content {
-      background: white;
-      color: #333;
-      border: 1px solid #e0e0e0;
-    }
-
-    .message-content strong {
-      color: #667eea;
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .message.user .message-content strong {
-      color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    .message-content em {
-      color: #764ba2;
-      font-style: italic;
-      font-size: 14px;
-    }
-
-    .message-content h1, .message-content h2, .message-content h3 {
-      color: #667eea;
-      margin: 8px 0 5px 0;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .message-content ul, .message-content ol {
-      margin: 5px 0;
-      padding-left: 18px;
-      font-size: 14px;
-    }
-
-    .message-content li {
-      margin: 2px 0;
-    }
-
-    .message-content a {
-      color: #667eea;
-      text-decoration: underline;
-      font-size: 14px;
-    }
-
-    .message-content a:hover {
-      color: #764ba2;
-    }
-
-    .highlight {
-      background: linear-gradient(120deg, #ffd93d 0%, #ffed4e 100%);
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-weight: 600;
-      color: #333;
-      font-size: 14px;
-    }
-
-    .info-box {
-      background: #e3f2fd;
-      border-left: 3px solid #2196f3;
-      padding: 6px;
-      margin: 5px 0;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .success-box {
-      background: #e8f5e9;
-      border-left: 3px solid #4caf50;
-      padding: 6px;
-      margin: 5px 0;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .warning-box {
-      background: #fff3e0;
-      border-left: 3px solid #ff9800;
-      padding: 6px;
-      margin: 5px 0;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .chat-input-container {
-      padding: 25px 30px;
-      background: white;
-      border-top: 1px solid #e0e0e0;
-      display: flex;
-      gap: 15px;
-      box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 14px 20px;
-      border: 2px solid #e0e0e0;
-      border-radius: 30px;
-      font-size: 15px;
-      outline: none;
-      transition: all 0.3s;
-      font-family: inherit;
-    }
-
-    .chat-input:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .send-button {
-      padding: 14px 32px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .send-button:hover:not(:disabled) {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    }
-
-    .send-button:active:not(:disabled) {
-      transform: translateY(-1px) scale(1.02);
-    }
-
-    .send-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
-    }
-
-    .image-upload-button {
-      padding: 14px 24px;
-      background: white;
-      color: #667eea;
-      border: 2px solid #667eea;
-      border-radius: 30px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-weight: bold;
-    }
-
-    .image-upload-button:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-color: transparent;
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .image-upload-button:active {
-      transform: translateY(-1px) scale(1.02);
-    }
-
-    .image-preview {
-      max-width: 200px;
-      max-height: 200px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-
-    .message-image {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 8px;
-    }
-
-    .remove-image {
-      background: #ff4444;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 15px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    .voice-recording {
-      background: #ff4444;
-      animation: pulse 1.5s infinite;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 15px;
-      max-width: 500px;
-      width: 90%;
-      text-align: center;
-    }
-
-    .modal-content h3 {
-      margin-bottom: 15px;
-      color: #667eea;
-    }
-
-    .modal-content textarea {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      margin: 10px 0;
-      font-family: inherit;
-      resize: vertical;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 15px;
-    }
-
-    .modal-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-
-    .modal-btn.primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    .modal-btn.secondary {
-      background: #e0e0e0;
-      color: #333;
-    }
-
-    .clear-chat-btn {
-      background: #ff4444;
-      border: 1px solid #cc0000;
-      color: white;
-      padding: 5px 12px;
-      border-radius: 15px;
-      cursor: pointer;
-      font-size: 10px;
-      font-weight: bold;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      white-space: nowrap;
-      box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3);
-    }
-
-    .clear-chat-btn:hover {
-      background: #ff0000;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(255, 68, 68, 0.5);
-    }
-
-    .clear-chat-btn:active {
-      transform: translateY(0);
-    }
-
-    .api-key-container {
-      padding: 4px 12px;
-      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-      border-bottom: 1px solid #28a745;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-      transition: all 0.3s ease;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      padding: 0 12px;
-      border-bottom: 0;
-    }
-
-    .api-key-container.visible {
-      max-height: 80px;
-      padding: 4px 12px;
-      border-bottom: 1px solid #28a745;
-      opacity: 1;
-    }
-
-    .api-key-container.hidden {
-      max-height: 0;
-      padding: 0 12px;
-      border-bottom: 0;
-      opacity: 0;
-    }
-
-    .api-key-container.disconnected {
-      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-      border-bottom-color: #ffc107;
-    }
-
-    .api-key-container.disconnected.visible {
-      border-bottom-color: #ffc107;
-    }
-
-    .api-key-input {
-      flex: 1;
-      min-width: 150px;
-      padding: 4px 8px;
-      border: 1px solid #28a745;
-      border-radius: 12px;
-      font-size: 10px;
-      transition: all 0.2s;
-    }
-
-    .api-key-container.disconnected .api-key-input {
-      border-color: #ffc107;
-    }
-
-    .api-key-input:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
-      transform: scale(1.005);
-    }
-
-    .api-key-btn {
-      padding: 4px 10px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 10px;
-    }
-
-    .api-key-container.disconnected .api-key-btn {
-      background: #ffc107;
-      color: #333;
-    }
-
-    .api-key-btn:hover {
-      transform: translateY(-1px) scale(1.02);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .api-key-btn:active {
-      transform: translateY(0) scale(1);
-    }
-
-    .api-key-status {
-      font-size: 10px;
-      font-weight: 600;
-      color: #155724;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .api-key-container.disconnected .api-key-status {
-      color: #856404;
-    }
-
-    .mode-selector {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mode-label {
-      font-weight: 700;
-      color: white;
-      font-size: 11px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    .mode-toggle {
-      position: relative;
-      display: inline-block;
-      width: 130px;
-      height: 32px;
-    }
-
-    .mode-toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .mode-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255,255,255,0.25);
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 20px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.2);
-      backdrop-filter: blur(10px);
-    }
-
-    .mode-slider:hover {
-      background: rgba(255,255,255,0.3);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.3);
-    }
-
-    .mode-slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 62px;
-      left: 3px;
-      bottom: 3px;
-      background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 17px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-
-    input:checked + .mode-slider:before {
-      transform: translateX(62px);
-    }
-
-    .mode-text {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 11px;
-      font-weight: 800;
-      pointer-events: none;
-      transition: all 0.3s;
-      color: #333;
-      letter-spacing: 0.3px;
-    }
-
-    .mode-text.left {
-      left: 8px;
-      opacity: 0.5;
-    }
-
-    .mode-text.right {
-      right: 8px;
-      opacity: 0.5;
-    }
-
-    input:checked ~ .mode-text.left {
-      opacity: 1;
-      color: #000;
-      transform: translateY(-50%) scale(1.05);
-    }
-
-    input:checked ~ .mode-text.right {
-      opacity: 0.5;
-    }
-
-    input:not(:checked) ~ .mode-text.left {
-      opacity: 0.5;
-    }
-
-    input:not(:checked) ~ .mode-text.right {
-      opacity: 1;
-      color: #000;
-      transform: translateY(-50%) scale(1.05);
-    }
-
-    .typing-indicator {
-      display: flex;
-      gap: 5px;
-      padding: 10px 14px;
-      align-items: center;
-    }
-
-    .typing-indicator::before {
-      content: '🧠';
-      margin-right: 8px;
-      animation: spin 3s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .typing-indicator span {
-      width: 8px;
-      height: 8px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 50%;
-      animation: typing 1.2s infinite ease-in-out;
-    }
-
-    .typing-indicator span:nth-child(2) {
-      animation-delay: 0.15s;
-    }
-
-    .typing-indicator span:nth-child(3) {
-      animation-delay: 0.3s;
-    }
-
-    @keyframes typing {
-      0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: 0.5;
-      }
-      30% {
-        transform: translateY(-10px);
-        opacity: 1;
-      }
-    }
-
-    .generated-image {
-      max-width: 100%;
-      border-radius: 10px;
-      margin: 10px 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .download-btn {
-      background: #4CAF50;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-top: 10px;
-      transition: all 0.2s;
-    }
-
-    .download-btn:hover {
-      background: #45a049;
-      transform: translateY(-2px);
-    }
-
-    .code-block {
-      background: #2d2d2d;
-      color: #f8f8f2;
-      padding: 15px;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin: 10px 0;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      position: relative;
-    }
-
-    .copy-code-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 5px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 11px;
-    }
-
-    .copy-code-btn:hover {
-      background: #764ba2;
-    }
-
-    .tool-indicator {
-      display: inline-block;
-      background: #667eea;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      margin-right: 8px;
-      margin-bottom: 8px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Sans Arena — Live Leaderboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace}#canvas{border:2px solid #555;box-shadow:0 0 20px #ff2255}.screen{position:absolute;color:white;text-align:center;font-size:24px;background:rgba(0,0,0,.85);padding:30px;border:2px solid #ff5588;border-radius:10px;z-index:10;display:none}input{display:block;width:240px;margin:15px auto;padding:10px;font-size:18px;border:2px solid #88ff88;border-radius:6px;background:#111;color:white}button{display:block;margin:8px auto;padding:10px 20px;min-width:180px;font-size:18px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;transition:all .2s}.btn-login{background:#55cc55;color:white}.btn-new{background:#ffaa55;color:#222}.btn-start{background:#ff5555;color:white}.btn-switch{background:#5588ff;color:white}.btn-achieve{background:#aa55ff;color:white;margin-top:15px}.btn-back{background:#555555;color:white}.color-opt,.shape-opt,.trail-opt{display:inline-block;margin:5px;padding:8px 12px;border:1px solid #555;border-radius:4px;cursor:pointer}.color-opt:hover,.shape-opt:hover,.trail-opt:hover{transform:scale(1.05);border-color:#88ff88}.selected{border-color:#88ff88;background:rgba(136,255,136,0.2)}#customScreen{padding:20px}.opt-section{margin:15px 0;text-align:left}#sansQuote{position:absolute;top:500px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#88ff88;padding:12px 20px;border:1px solid #88ff88;border-radius:6px;font-size:20px;z-index:100;opacity:0;pointer-events:none;max-width:500px;text-align:center}
+.char-opt { display: flex; align-items: center; padding:12px; margin:8px 0; border:2px solid #555; border-radius:6px; cursor:pointer; }
+.char-opt:hover { border-color:#88ff88; background:rgba(136,255,136,0.1); }
+.char-opt.selected { border-color:#88ff88; background:rgba(136,255,136,0.2); }
+.char-color { width:20px; height:20px; margin-right:10px; border-radius:4px; }
+.char-name { font-weight:bold; font-size:20px; }
+.char-desc { font-size:14px; color:#aaa; margin-top:4px; }
+#leaderboard { margin-top:20px; text-align:left; background:rgba(30,30,40,0.6); padding:15px; border-radius:8px; }
+.lb-header { font-weight:bold; font-size:20px; margin-bottom:12px; color:#ffdd55; text-align:center; }
+.lb-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #333; }
+.lb-pos { width:30px; text-align:center; font-weight:bold; }
+.lb-name { flex:1; font-size:16px; }
+.lb-char { width:90px; text-align:center; font-size:14px; }
+.lb-score { width:70px; text-align:right; font-weight:bold; color:#ff5555; font-size:16px; }
+.lb-highlight { background:rgba(255,221,85,0.2) !important; }
+</style>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="header-left">
-        <div class="mode-selector">
-          <span class="mode-label">Mode:</span>
-          <label class="mode-toggle">
-            <input type="checkbox" id="modeToggle" checked>
-            <span class="mode-slider">
-              <span class="mode-text left">🧠 Think</span>
-              <span class="mode-text right">⚡ Quick</span>
-            </span>
-          </label>
-        </div>
-      </div>
-      <div class="header-center">
-        <div class="header-title">🧠 Gordon's Smart Brain ✨</div>
-        <div class="header-subtitle">🚀 Your Unlimited AI Assistant - No Daily Limits! 🎉</div>
-      </div>
-      <div class="header-right">
-      </div>
-    </div>
-    
-    <div class="api-key-container" id="apiKeyContainer">
-      <span class="api-key-status" id="apiKeyStatus">⚠️ API Key Required:</span>
-      <input 
-        type="password" 
-        class="api-key-input" 
-        id="apiKeyInput" 
-        placeholder="Enter your Anthropic API Key (sk-ant-...)"
-      >
-      <button class="api-key-btn" id="apiKeyBtn">Connect</button>
-      <div style="width: 100%; font-size: 11px; color: inherit; margin-top: 5px;">
-        💡 <strong>Note:</strong> Using placeholder API key. Get your real FREE key at <a href="https://console.anthropic.com/" target="_blank" style="color: #667eea; text-decoration: underline;">console.anthropic.com</a> for full access • Press Enter to update
-      </div>
-    </div>
-    <div class="feature-buttons">
-      <button class="feature-btn" id="generateImageBtn">🎨 Image</button>
-      <button class="feature-btn" id="canvaSlideBtn">📊 Slide</button>
-      <button class="feature-btn" id="posterBtn">🖼️ Poster</button>
-      <button class="feature-btn" id="summarizeBtn">📄 Summarize</button>
-      <button class="feature-btn" id="translateBtn">🌐 Translate</button>
-      <button class="feature-btn" id="codeBtn">💻 Code</button>
-      <button class="feature-btn" id="creativeBtn">✨ Creative</button>
-      <button class="feature-btn" id="mathBtn">🔢 Math</button>
-      <button class="feature-btn" id="explainBtn">🎓 Explain</button>
-      <button class="feature-btn" id="grammarBtn">📝 Grammar</button>
-      <button class="feature-btn" id="ideaBtn">💡 Ideas</button>
-      <button class="feature-btn" id="emailBtn">✉️ Email</button>
-      <button class="feature-btn" id="debugBtn">🐛 Debug</button>
-    </div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="message assistant">
-        <div class="message-content">
-          🎉 Welcome to <strong>Gordon's Smart Brain</strong> ✨ - Your Unlimited AI Powerhouse! 🚀
-          <br><br>
-          <strong>💫 What I Can Do:</strong><br>
-          🔍 Web Search • 📷 Image Analysis • 📄 Summarize • 🌐 Translate • 💻 Code Master<br>
-          ✨ Creative Writer • 🔢 Math Genius • 📊 Data Analysis • 📈 Diagrams • 🎓 Teacher<br>
-          <br>
-          🎯 <strong>Ready to chat!</strong> Type your message below and let's go! 🎨
-        </div>
-      </div>
-    </div>
-    <div class="chat-input-container">
-      <input 
-        type="file" 
-        id="imageInput" 
-        accept="image/*" 
-        style="display: none;"
-      >
-      <button class="image-upload-button" id="imageButton">📷 Image</button>
-      <input 
-        type="text" 
-        class="chat-input" 
-        id="chatInput" 
-        placeholder="💬 Type your message here... Ask me anything! 🌟"
-        autocomplete="off"
-      >
-      <button class="send-button" id="sendButton">🚀 Send</button>
-      <button class="clear-chat-btn" id="clearChatBtn">🗑️ Clear</button>
-    </div>
-    <div id="imagePreviewContainer" style="padding: 0 20px; background: white;"></div>
-  </div>
+<canvas id="canvas" width="800" height="600"></canvas>
+<div id="sansQuote"></div>
+<div id="authScreen" class="screen" style="display:block;">
+<div>💀 Sans Arena — Live Leaderboard</div>
+<input id="usernameInput" type="text" placeholder="Enter your name" maxlength="16" autocomplete="off">
+<button id="loginBtn" class="btn-login">▶️ Continue</button>
+<button id="newPlayerBtn" class="btn-new">🆕 New Player</button>
+<div id="userList"></div>
+</div>
+<div id="customScreen" class="screen">
+<div>🎨 Customize Your Soul</div>
+<div class="opt-section"><div>Color:</div><div id="colorOptions"></div></div>
+<div class="opt-section"><div>Shape:</div><div id="shapeOptions"></div></div>
+<div class="opt-section"><div>Trail:</div><div id="trailOptions"></div></div>
+<button id="saveCustomBtn" class="btn-login">💾 Save & Continue</button>
+<button id="skipCustomBtn" class="btn-back">⏭️ Skip</button>
+</div>
+<div id="charSelectScreen" class="screen">
+<div>🎭 Choose Your Fighter</div>
+<div id="charOptions" style="margin:20px 0; text-align:left;"></div>
+<button id="confirmCharBtn" class="btn-login">✅ Confirm</button>
+<button id="backToCustomBtn" class="btn-back">⬅️ Back</button>
+</div>
+<div id="startScreen" class="screen">
+<div>🎮 Welcome, <span id="displayName">-</span>!</div>
+<button id="startBtn" class="btn-start">⚔️ Start Fight</button>
+<div id="stats"></div>
+<div id="leaderboard"></div>
+<button id="achievementsBtn" class="btn-achieve">🏆 Achievements</button>
+</div>
+<div id="achievementsScreen" class="screen">
+<div>🏆 Achievements</div>
+<div id="achievementsList"></div>
+<button id="backToStartBtn">⬅️ Back</button>
+</div>
+<div id="gameOver" class="screen">
+<div>💀 You died.</div>
+<div style="margin:15px 0;font-size:20px;">
+<div>Score: <span class="highlight" id="finalScore">0</span></div>
+<div>Time: <span class="highlight" id="finalTime">0s</span></div>
+<div>Dodges: <span class="highlight" id="finalDodges">0</span></div>
+</div>
+<button id="retryBtn" class="btn-start">↻ Retry</button>
+<button id="changeCharBtn" class="btn-switch">🎭 Change Character</button>
+<button id="switchPlayerBtn" class="btn-switch">🔄 Switch Player</button>
+<button id="menuBtn" class="btn-login">🏡 Main Menu</button>
+<div id="leaderboardGameOver"></div>
+</div>
+<script>
+// ✅ REPLACE THIS WITH YOUR GIST RAW URL
+const GIST_URL = "https://gist.githubusercontent.com/YOUR_USERNAME/ABC123/raw/leaderboard.json  ";
 
-  <!-- Modals -->
-  <div class="modal" id="canvaSlideModal">
-    <div class="modal-content">
-      <h3>📊 Create Canva Slide</h3>
-      <textarea id="canvaSlideText" rows="4" placeholder="Describe your slide content...&#10;Example: Product launch presentation with modern design"></textarea>
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="canvaSlideSubmit">Create</button>
-        <button class="modal-btn secondary" id="canvaSlideCancelBtn">Cancel</button>
-      </div>
-    </div>
-  </div>
+window.addEventListener('load', () => {
+class PlayerDB {
+  async save(p) {
+    try {
+      localStorage.setItem(`sans_player_${p.username}`, JSON.stringify(p));
+    } catch (e) {}
+  }
+  async get(u) {
+    try {
+      const d = localStorage.getItem(`sans_player_${u}`);
+      return d ? JSON.parse(d) : null;
+    } catch (e) { return null; }
+  }
+  async getAll() {
+    try {
+      return Object.keys(localStorage)
+        .filter(k => k.startsWith('sans_player_'))
+        .map(k => JSON.parse(localStorage.getItem(k)))
+        .filter(p => p);
+    } catch (e) { return []; }
+  }
+}
+const db = new PlayerDB();
 
-  <div class="modal" id="posterModal">
-    <div class="modal-content">
-      <h3>🖼️ Create Poster</h3>
-      <textarea id="posterText" rows="4" placeholder="Describe your poster...&#10;Example: Event poster for music festival with vibrant colors"></textarea>
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="posterSubmit">Create</button>
-        <button class="modal-btn secondary" id="posterCancelBtn">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="summarizeModal">
-    <div class="modal-content">
-      <h3>📄 Summarize Text</h3>
-      <textarea id="summarizeText" rows="6" placeholder="Paste your text here to summarize..."></textarea>
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="summarizeSubmit">Summarize</button>
-        <button class="modal-btn secondary" id="summarizeCancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="translateModal">
-    <div class="modal-content">
-      <h3>🌐 Translate Text</h3>
-      <textarea id="translateText" rows="4" placeholder="Enter text to translate..."></textarea>
-      <input type="text" id="translateLang" placeholder="Target language (e.g., Spanish, French, Japanese)" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; margin: 10px 0;">
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="translateSubmit">Translate</button>
-        <button class="modal-btn secondary" id="translateCancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="mathModal">
-    <div class="modal-content">
-      <h3>🔢 Math Problem Solver</h3>
-      <textarea id="mathText" rows="4" placeholder="Enter your math problem..."></textarea>
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="mathSubmit">Solve</button>
-        <button class="modal-btn secondary" id="mathCancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="generateImageModal">
-    <div class="modal-content">
-      <h3>🎨 Generate Realistic Image</h3>
-      <textarea id="generateImageText" rows="4" placeholder="Describe any image you want...&#10;Example: A professional photo of a mountain landscape at sunset"></textarea>
-      <div class="modal-buttons">
-        <button class="modal-btn primary" id="generateImageSubmit">Generate</button>
-        <button class="modal-btn secondary" id="generateImageCancelBtn">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Wait for DOM to fully load before running any code
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM fully loaded!');
-      
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendButton = document.getElementById('sendButton');
-    const imageButton = document.getElementById('imageButton');
-    const imageInput = document.getElementById('imageInput');
-    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-    const clearChatBtn = document.getElementById('clearChatBtn');
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const apiKeyBtn = document.getElementById('apiKeyBtn');
-    const apiKeyContainer = document.getElementById('apiKeyContainer');
-    const apiKeyStatus = document.getElementById('apiKeyStatus');
-    const modeToggle = document.getElementById('modeToggle');
-    
-    console.log('Elements found:', {
-      sendButton: !!sendButton,
-      chatInput: !!chatInput,
-      chatMessages: !!chatMessages
-    });
-    
-    let conversationHistory = [];
-    let currentImage = null;
-    let apiKey = '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';
-    let isThinkingMode = false;
-    let lastRequestTime = 0;
-    const MIN_REQUEST_INTERVAL = 10;
-    
-    const DEMO_API_KEY = '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';
-
-    modeToggle.addEventListener('change', (e) => {
-      isThinkingMode = !e.target.checked;
-      const modeName = isThinkingMode ? '🧠 Thinking Mode' : '⚡ Quick Answer Mode';
-      addMessage(`Switched to ${modeName}!`, false);
-    });
-
-    const savedKey = localStorage.getItem('anthropic_api_key');
-    if (savedKey && savedKey.startsWith('sk-ant-')) {
-      apiKey = savedKey;
-      apiKeyInput.value = savedKey;
+let liveLeaderboard = [];
+async function fetchLeaderboard() {
+  try {
+    const res = await fetch(GIST_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error("Gist not found");
+    const data = await res.json();
+    liveLeaderboard = data.top3 || [];
+    renderLiveLeaderboard();
+  } catch (e) {
+    console.warn("Failed to load live leaderboard:", e);
+  }
+}
+function renderLiveLeaderboard() {
+  const el1 = document.getElementById('leaderboard');
+  const el2 = document.getElementById('leaderboardGameOver');
+  const render = (el) => {
+    if (!el) return;
+    let html = `<div class="lb-header">🌐 LIVE LEADERBOARD</div>`;
+    if (liveLeaderboard.length === 0) {
+      html += `<div style="color:#666; margin-top:10px; text-align:center;">Loading...</div>`;
     } else {
-      // Auto-set the real API key
-      apiKey = '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';
-      apiKeyInput.value = apiKey;
-      localStorage.setItem('anthropic_api_key', apiKey);
-    }
-    
-    updateApiKeyStatus(true);
-    sendButton.disabled = false;
-    // Always hide API input
-    apiKeyContainer.classList.remove('visible');
-    apiKeyContainer.classList.add('hidden');
-    
-    setTimeout(() => {
-      addMessage('🚀 System ready! Start chatting now - just type your message below! ✨', false);
-    }, 500);
-
-    apiKeyInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        apiKeyBtn.click();
-      }
-    });
-
-    apiKeyBtn.addEventListener('click', () => {
-      const key = apiKeyInput.value.trim();
-      if (key && key.startsWith('sk-ant-')) {
-        apiKey = key;
-        localStorage.setItem('anthropic_api_key', key);
-        updateApiKeyStatus(true);
-        sendButton.disabled = false;
-        addMessage('🎉 Perfect! Your API key is connected! Let\'s chat! 🚀✨', false);
-        setTimeout(() => {
-          apiKeyContainer.classList.remove('visible');
-          apiKeyContainer.classList.add('hidden');
-        }, 2000);
-      } else if (key) {
-        alert('⚠️ Please enter a valid Anthropic API key that starts with "sk-ant-"');
-      }
-    });
-
-    function updateApiKeyStatus(connected) {
-      if (connected) {
-        apiKeyContainer.classList.remove('disconnected');
-        apiKeyStatus.innerHTML = '✅ <strong>Connected & Ready! 🎉</strong>';
-        apiKeyBtn.innerHTML = '🔄 Update Key';
-        sendButton.disabled = false;
-      } else {
-        apiKeyContainer.classList.add('disconnected');
-        apiKeyStatus.innerHTML = '⚠️ <strong>Connect Your Brain!</strong>';
-        apiKeyBtn.innerHTML = '⚡ Connect Now';
-        sendButton.disabled = true;
-      }
-    }
-
-    updateApiKeyStatus(!!apiKey);
-
-    const generateImageBtn = document.getElementById('generateImageBtn');
-    const canvaSlideBtn = document.getElementById('canvaSlideBtn');
-    const posterBtn = document.getElementById('posterBtn');
-    const summarizeBtn = document.getElementById('summarizeBtn');
-    const translateBtn = document.getElementById('translateBtn');
-    const codeBtn = document.getElementById('codeBtn');
-    const creativeBtn = document.getElementById('creativeBtn');
-    const mathBtn = document.getElementById('mathBtn');
-    const explainBtn = document.getElementById('explainBtn');
-    const grammarBtn = document.getElementById('grammarBtn');
-    const ideaBtn = document.getElementById('ideaBtn');
-    const emailBtn = document.getElementById('emailBtn');
-    const debugBtn = document.getElementById('debugBtn');
-
-    const generateImageModal = document.getElementById('generateImageModal');
-    const canvaSlideModal = document.getElementById('canvaSlideModal');
-    const posterModal = document.getElementById('posterModal');
-    const summarizeModal = document.getElementById('summarizeModal');
-    const translateModal = document.getElementById('translateModal');
-    const mathModal = document.getElementById('mathModal');
-
-    clearChatBtn.addEventListener('click', () => {
-      if (confirm('🗑️ Clear all chat history? This cannot be undone!')) {
-        conversationHistory = [];
-        chatMessages.innerHTML = `
-          <div class="message assistant">
-            <div class="message-content">
-              ✨ Fresh start! Chat history cleared! Ready for new adventures? 🚀
-            </div>
+      liveLeaderboard.forEach((entry, i) => {
+        const isCurrent = currentPlayer?.username === entry.username;
+        const char = CHARACTERS.find(c => c.id === entry.character) || { name: '???' };
+        html += `
+          <div class="lb-row ${isCurrent ? 'lb-highlight' : ''}">
+            <div class="lb-pos">${i+1}.</div>
+            <div class="lb-name">${entry.username}</div>
+            <div class="lb-char">${char.name}</div>
+            <div class="lb-score">${entry.score}</div>
           </div>
         `;
+      });
+    }
+    el.innerHTML = html;
+  };
+  render(el1);
+  render(el2);
+}
+
+setInterval(fetchLeaderboard, 5000);
+fetchLeaderboard();
+
+let gameState = 'auth', currentPlayer = null;
+const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'),
+screens = {
+  auth: document.getElementById('authScreen'),
+  custom: document.getElementById('customScreen'),
+  charSelect: document.getElementById('charSelectScreen'),
+  start: document.getElementById('startScreen'),
+  achievements: document.getElementById('achievementsScreen'),
+  gameOver: document.getElementById('gameOver')
+},
+usernameInput = document.getElementById('usernameInput'),
+displayName = document.getElementById('displayName'),
+statsEl = document.getElementById('stats'),
+finalScoreEl = document.getElementById('finalScore'),
+finalTimeEl = document.getElementById('finalTime'),
+finalDodgesEl = document.getElementById('finalDodges'),
+userListEl = document.getElementById('userList'),
+colorOptions = document.getElementById('colorOptions'),
+shapeOptions = document.getElementById('shapeOptions'),
+trailOptions = document.getElementById('trailOptions'),
+charOptions = document.getElementById('charOptions');
+
+let hp = 10, time = 0, blueMode = false, blueTime = 0, soulX = 385, soulY = 285, soulSpeed = 420,
+keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false, Space: false, Z: false, G: false },
+bones = [], blasters = [], damagePopups = [], score = 0, dodges = 0, blueActivations = 0,
+homingWavesSurvived = 0, lasersDodged = 0, horizontalDodged = 0, nextAttackTime = 0, animationId = null,
+SPEED_MULT = 1.3;
+
+let blueTimeMult = 1.0,
+timeSlowActive = false, timeSlowCooldown = 0, timeSlowActiveDuration = 0,
+dodgeInvincibility = 0,
+friskSurge = false, friskSurgeTime = 0, friskDodgeCount = 0,
+sansKarma = 0, sansKarmaActive = false, sansKarmaTime = 0,
+papyrusPuzzleCooldown = 8, papyrusPuzzleActive = false,
+undyneFreeze = false, undyneSlowAfter = false,
+gasterRift = false, gasterSlowAfter = false, gasterCooldown = 0;
+
+let gasterMode = false, gasterDrainTimer = 10;
+let rainbowMode = false;
+let rainbowHue = 0;
+const rainbowParticles = [];
+const explosionParticles = [];
+const COLORS = { red: '#ff5555', blue: '#5588ff', green: '#55ff55', pink: '#ff55ff', yellow: '#ffff55', purple: '#aa55ff' };
+const SHAPES = ['square', 'circle', 'diamond', 'star'];
+const TRAILS = ['none', 'short', 'long'];
+const CHARACTERS = [
+  { id: 'frisk', name: "Frisk", desc: "Determination Surge: 10 dodges → +1 HP & 1.8× speed for 5s", color: '#55ff55' },
+  { id: 'sans', name: "Sans", desc: "Karmic Retribution: Every 5 dodges, next hit is harmless & boosts score", color: '#ff5555' },
+  { id: 'papyrus', name: "Papyrus", desc: "PAPYRUS PUZZLE: Every 8s, dodge a puzzle bone to freeze all bones for 2s", color: '#ffff55' },
+  { id: 'undyne', name: "Undyne", desc: "UNDYNE THE UNDYING: Z → 3s freeze, 2s slow, 6.7s CD", color: '#5588ff' },
+  { id: 'gaster', name: "Gaster", desc: "CHRONO RIFT: G → 2s full stop + score boost, 8s CD", color: '#8844aa' }
+];
+let selectedCharacter = 'frisk';
+let soulColor = 'red', soulShape = 'square', soulTrail = 'none';
+const trailHistory = [], MAX_TRAIL = 5;
+
+function createExplosion(x, y, color = '#ff5555', scale = 1) {
+  const count = Math.floor((12 + Math.random() * 8) * scale);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+    const speed = (80 + Math.random() * 120) * scale;
+    const size = (2 + Math.random() * 4) * scale;
+    const life = (0.8 + Math.random() * 0.4) * scale;
+    explosionParticles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size,
+      life,
+      maxLife: life,
+      color,
+      type: Math.random() > 0.3 ? 'line' : 'dot'
+    });
+  }
+  const shake = 10 * scale;
+  canvas.style.transform = `translate(${(Math.random()-0.5)*shake}px, ${(Math.random()-0.5)*shake}px)`;
+  setTimeout(() => { canvas.style.transform = ''; }, 120);
+}
+
+class Blaster {
+  constructor(x,y,a=0){this.x=x;this.y=y;this.angle=a;this.state='idle';this.timer=0;this.chargeTime=1.5;this.fireTime=0.2;this.cooldown=1.0}
+  update(dt){
+    this.timer += dt;
+    if(this.state==='idle'&&this.timer>1.0){this.state='charging';this.timer=0;}
+    else if(this.state==='charging'&&this.timer>this.chargeTime){this.state='firing';this.timer=0;
+      const r=this.angle*Math.PI/180,dx=Math.cos(r),dy=Math.sin(r);
+      bones.push({type:'laser',x:this.x+dx*30,y:this.y+dy*30,vx:dx*700*SPEED_MULT,vy:dy*700*SPEED_MULT,w:6,h:6,age:0,maxAge:0.8,color:'#ff5555'});}
+    else if(this.state==='firing'&&this.timer>this.fireTime){this.state='cooldown';this.timer=0;}
+    else if(this.state==='cooldown'&&this.timer>this.cooldown){this.state='idle';this.timer=0;}
+  }
+  draw(){
+    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle*Math.PI/180);ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+    let s=6;
+    if(this.state==='charging'){const t=this.timer/this.chargeTime;s=6+9*t;ctx.fillStyle=`rgb(255,${100+155*t},${50+205*t})`;}
+    else if(this.state==='firing'){ctx.fillStyle='#ff5555';s=16;}
+    else{ctx.fillStyle='#fff';}
+    ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+
+let homingWaveId = 0;
+function spawnVertical(){ for(let i=0,c=4+~~(Math.random()*3);i<c;i++) bones.push({type:'bone',x:50+Math.random()*700,y:-30,vx:0,vy:286*SPEED_MULT,w:20,h:40,color:'#ffffff'}); }
+function spawnHoming(){
+  homingWaveId++;
+  [0,2.094,4.188].forEach((a,i)=>{
+    const x=400+Math.cos(a)*40,y=-60+Math.sin(a)*40;
+    bones.push({type:'homing',x,y,vx:0,vy:0,targetX:soulX+15,targetY:soulY+15,maxSpeed:312*SPEED_MULT,acceleration:306*SPEED_MULT,w:24,h:24,color:'#ff55ff',pulse:0,age:0,maxAge:8.0,waveId:homingWaveId});
+  });
+}
+function spawnZigzag(){ for(let r=0;r<2;r++) for(let x=-80+(r%2)*200;x<880;x+=200) bones.push({type:'bone',x,y:120+r*160,vx:0,vy:0,w:70,h:8,oscillate:true,phase:r*Math.PI,amp:50,freq:2.6,color:'#55ff55'}); }
+function spawnConverge(){ for(let i=0;i<5;i++){ const a=i/5*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a); bones.push({type:'bone',x:400+dx*400,y:300+dy*400,vx:-dx*208*SPEED_MULT,vy:-dy*208*SPEED_MULT,w:70,h:8,color:'#ffff55'}); } }
+function spawnRapidPulse(){ for(let r=0;r<2;r++){ const rad=60+r*90; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2,x=400+Math.cos(a)*rad,y=300+Math.sin(a)*rad,dx=Math.cos(a),dy=Math.sin(a); bones.push({type:'bone',x:x-25*dx,y:y-25*dy,vx:dx*195*SPEED_MULT,vy:dy*195*SPEED_MULT,w:50,h:8,color:'#ffaa55'}); } } }
+function spawnHorizontalHoming(){
+  const count=3+~~(Math.random()*2);
+  for(let i=0;i<count;i++){
+    const fromLeft=Math.random()>0.5;
+    const x=fromLeft?-20:820;
+    const y=50+Math.random()*500;
+    bones.push({type:'horizontal_homing',x,y,vx:0,vy:0,targetX:soulX+15,targetY:soulY+15,maxSpeed:400*SPEED_MULT,acceleration:250*SPEED_MULT,w:12,h:8,color:'#ffff55',age:0,maxAge:3.0});
+  }
+}
+function spawnPuzzleBone() {
+  const dir = Math.random() > 0.5 ? 1 : -1;
+  const y = 50 + Math.random() * 500;
+  bones.push({type: 'puzzle',x: dir > 0 ? -30 : 830,y: y,vx: dir * 300 * SPEED_MULT,vy: 0,w: 50, h: 50,color: '#ffff55',age: 0, maxAge: 4.0});
+}
+function spawnAttack(){
+  const attacks=[spawnVertical,spawnHoming,spawnZigzag,spawnConverge,spawnHorizontalHoming];
+  if(time>30)attacks.push(spawnRapidPulse);
+  attacks[~~(Math.random()*attacks.length)]();
+  nextAttackTime=time+0.3+Math.random()*0.5;
+}
+
+function drawStar(ctx, cx, cy, size, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const or = size / 2, ir = size / 4;
+  for (let i = 0; i < 5; i++) {
+    const a1 = (i * 72 - 90) * Math.PI / 180;
+    const a2 = ((i + 0.5) * 72 - 90) * Math.PI / 180;
+    const x1 = cx + Math.cos(a1) * or;
+    const y1 = cy + Math.sin(a1) * or;
+    const x2 = cx + Math.cos(a2) * ir;
+    const y2 = cy + Math.sin(a2) * ir;
+    if (i === 0) ctx.moveTo(x1, y1);
+    else ctx.lineTo(x1, y1);
+    ctx.lineTo(x2, y2);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawSoul(){
+  const x=soulX,y=soulY,size=30;
+  let color = gasterMode ? '#ffffff' : (COLORS[soulColor]||'#ff5555');
+  if (rainbowMode) {
+    rainbowHue = (rainbowHue + 1.5) % 360;
+    const h = rainbowHue;
+    const s = 85 + 15 * Math.sin(performance.now()/180);
+    const l = 55 + 10 * Math.sin(performance.now()/250);
+    color = `hsl(${h}, ${s}%, ${l}%)`;
+    if (Math.random() < 0.4) {
+      rainbowParticles.push({
+        x: x + 15 + (Math.random()-0.5)*25,
+        y: y + 15 + (Math.random()-0.5)*25,
+        vx: (Math.random()-0.5)*50,
+        vy: (Math.random()-0.5)*50 - 20,
+        hue: h,
+        life: 1.2
+      });
+    }
+  }
+  if (friskSurge) color = '#55ffaa';
+  if (sansKarmaActive) color = '#ffaa55';
+  if (gasterRift) color = '#8844aa';
+  trailHistory.unshift({x:x+size/2,y:y+size/2});
+  if(trailHistory.length>MAX_TRAIL)trailHistory.pop();
+  if (rainbowMode && soulTrail !== 'none') {
+    const count = soulTrail === 'short' ? 4 : 6;
+    for(let i=1; i<Math.min(count, trailHistory.length); i++) {
+      const p = trailHistory[i];
+      const alpha = 1 - i/count * 0.7;
+      const scale = 1 - i/count * 0.4;
+      ctx.globalAlpha = alpha;
+      const h = (rainbowHue - i*25) % 360;
+      ctx.fillStyle = `hsl(${h}, 100%, 65%)`;
+      if(soulShape==='circle'){ctx.beginPath();ctx.arc(p.x,p.y,size/2*scale,0,Math.PI*2);ctx.fill();}
+      else if(soulShape==='diamond'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2*scale,-size/2*scale,size*scale,size*scale);ctx.restore();}
+      else if(soulShape==='star'){drawStar(ctx,p.x,p.y,size*scale,`hsl(${h}, 100%, 65%)`);}
+      else{ctx.fillRect(p.x-size/2*scale,p.y-size/2*scale,size*scale,size*scale);}
+    }
+    ctx.globalAlpha = 1;
+  } else if (soulTrail !== 'none') {
+    const count=soulTrail==='short'?3:5;
+    for(let i=1;i<Math.min(count,trailHistory.length);i++){
+      const p=trailHistory[i];
+      const alpha=1-i/count*0.7;
+      const scale=1-i/count*0.5;
+      ctx.globalAlpha=alpha;
+      ctx.fillStyle=color;
+      if(soulShape==='circle'){ctx.beginPath();ctx.arc(p.x,p.y,size/2*scale,0,Math.PI*2);ctx.fill();}
+      else if(soulShape==='diamond'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2*scale,-size/2*scale,size*scale,size*scale);ctx.restore();}
+      else if(soulShape==='star'){drawStar(ctx,p.x,p.y,size*scale,color);}
+      else{ctx.fillRect(p.x-size/2*scale,p.y-size/2*scale,size*scale,size*scale);}
+    }
+    ctx.globalAlpha=1;
+  }
+  ctx.strokeStyle=color;
+  ctx.lineWidth=2.5;
+  const fillStyle=gasterMode?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.15)';
+  ctx.fillStyle=fillStyle;
+  if(soulShape==='circle'){ctx.beginPath();ctx.arc(x+size/2,y+size/2,size/2,0,Math.PI*2);ctx.fill();ctx.stroke();}
+  else if(soulShape==='diamond'){ctx.save();ctx.translate(x+size/2,y+size/2);ctx.rotate(Math.PI/4);ctx.fillRect(-size/2,-size/2,size,size);ctx.strokeRect(-size/2,-size/2,size,size);ctx.restore();}
+  else if(soulShape==='star'){drawStar(ctx,x+size/2,y+size/2,size,color);ctx.strokeStyle=color;ctx.lineWidth=2.5;drawStar(ctx,x+size/2,y+size/2,size,'rgba(0,0,0,0)');ctx.stroke();}
+  else{ctx.beginPath();ctx.rect(x,y,size,size);ctx.fill();ctx.stroke();}
+  if(gasterMode){ctx.fillStyle='#ff5555';ctx.font='bold 14px Courier New';ctx.fillText('G',x+size-10,y+18);}
+  if (dodgeInvincibility > 0) {
+    ctx.strokeStyle = '#ff55ff';ctx.lineWidth = 2;ctx.beginPath(); ctx.arc(x+15, y+15, 20, 0, Math.PI*2); ctx.stroke();
+  }
+  if (undyneFreeze || gasterRift) {
+    ctx.strokeStyle = undyneFreeze ? '#5588ff' : '#8844aa';
+    ctx.setLineDash([5,5]);ctx.lineWidth = 2;ctx.strokeRect(x-2, y-2, size+4, size+4);ctx.setLineDash([]);
+  }
+}
+
+const QUOTES = {
+  dodgeStreak: ["heh. looks like you've got the hang of it.", "not bad. for a skeleton, i'm pretty fast, huh?", "you're getting better. scary."],
+  blueMode: ["bet you didn't see *that* coming.", "well. guess it's my turn.", "oops. did i do that?"],
+  homingDodge: ["nice dodge.", "you can run... but you can't hide.", "determination is impressive. useless, but impressive."],
+  lowHP: ["you're not looking so great there, pal.", "heya. you look tired.", "i wonder how many hp you have left?"],
+  death: ["you died.", "it's a beautiful day outside. birds are singing...", "well. here goes nothing."],
+  gasterOn: ["…determination detected.", "gaster mode: time slows on dodge. hp drains after 10s.", "type 'gaster' again to disable."],
+  surge: ["determination rising...", "you’re glowing!", "that’s the spirit."],
+  karma: ["karma’s a funny thing.", "whoops. my bad.", "did that hurt?"],
+  puzzle: ["nyeh heh heh! solve this!", "a puzzle for you!", "catch me if you can!"],
+  undyne: ["FEEL MY WRATH!", "UNDYNE THE UNDYING!", "I WON’T HOLD BACK!"],
+  gasterRift: ["...timeline fragmented.", "error: causality violation.", "restructuring spacetime..."],
+  rainbow: ["colors of determination...", "a spectrum of souls.", "rainbow... just like before."],
+  '800_reached': ["800? impressive.", "you’ve reached the threshold.", "the end draws near."],
+  'all_achievements': ["legendary. you’ve done it all.", "nothing left to prove.", "true pacifist status: confirmed."]
+};
+function sayQuote(type) {
+  const quote = QUOTES[type][Math.floor(Math.random() * QUOTES[type].length)];
+  const el = document.getElementById('sansQuote');
+  el.textContent = `"${quote}" — sans`;
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '1'; }, 50);
+  setTimeout(() => { el.style.opacity = '0'; }, 5000);
+}
+
+const ACHIEVEMENTS = [
+  { id: 'first_dodge', name: "First Dodge", desc: "Dodge your first bone" },
+  { id: '100_score', name: "Getting Started", desc: "Reach 100 score" },
+  { id: 'blue_master', name: "Blue Master", desc: "Use Blue Mode 10 times" },
+  { id: '30s_survivor', name: "Half-Minute Hero", desc: "Survive 30 seconds" },
+  { id: 'homing_survivor', name: "Homing Survivor", desc: "Survive a homing wave" },
+  { id: 'horizontal_dodger', name: "Needle Dodger", desc: "Dodge 20 horizontal homing bones" },
+  { id: 'undyne_freeze', name: "Time Bender", desc: "Use Undyne’s full freeze 5 times" },
+  { id: 'papyrus_puzzle', name: "Puzzle Master", desc: "Solve 10 Papyrus puzzles" },
+  { id: 'gaster_rift', name: "Chrono Weaver", desc: "Use Gaster’s Rift 5 times" },
+  { id: 'rainbow_soul', name: "Rainbow Warrior", desc: "Unlock Rainbow Soul with '676767'" }
+];
+function checkAchievements(p, run = {}) {
+  const u = [];
+  ACHIEVEMENTS.forEach(a => {
+    if (p.achievements.includes(a.id)) return;
+    let x = false;
+    switch (a.id) {
+      case 'first_dodge': x = p.totalDodges >= 1; break;
+      case '100_score': x = p.bestScore >= 100; break;
+      case 'blue_master': x = p.blueActivations >= 10; break;
+      case '30s_survivor': x = p.longestTime >= 30; break;
+      case 'homing_survivor': x = p.homingSurvived >= 1; break;
+      case 'horizontal_dodger': x = (run.horizontalDodged || 0) >= 20; break;
+      case 'undyne_freeze': x = (p.undyneFreezes || 0) >= 5; break;
+      case 'papyrus_puzzle': x = (p.papyrusPuzzles || 0) >= 10; break;
+      case 'gaster_rift': x = (p.gasterRifts || 0) >= 5; break;
+      case 'rainbow_soul': x = p.rainbowUnlocked || false; break;
+    }
+    if (x) {
+      p.achievements.push(a.id);
+      u.push(a.name);
+    }
+  });
+  return u;
+}
+function showAchievement(n) {
+  const e = document.createElement('div');
+  e.innerHTML = `🏆 <b>${n}</b>`;
+  Object.assign(e.style, {
+    position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+    background: '#aa55ff', color: 'white', padding: '10px 20px',
+    borderRadius: '6px', fontWeight: 'bold', zIndex: '100',
+    boxShadow: '0 0 10px #ff55ff', pointerEvents: 'none'
+  });
+  document.body.appendChild(e);
+  setTimeout(() => e.remove(), 2500);
+}
+function renderAchievements(p) {
+  if (!p || !p.achievements) return;
+  const unlocked = ACHIEVEMENTS.filter(a => p.achievements.includes(a.id));
+  document.getElementById('achievementsList').innerHTML = unlocked.length
+    ? unlocked.map(a => `<div class="ach-unlocked">✅ <b>${a.name}</b><br><small>${a.desc}</small></div>`).join('')
+    : '<div style="color:#888;margin:20px 0;">No achievements yet.</div>';
+}
+function updateStatsUI() {
+  if (!currentPlayer) return;
+  displayName.textContent = currentPlayer.username;
+  statsEl.innerHTML = `
+    <div class="stat">🎭 Character: <span class="highlight">${CHARACTERS.find(c=>c.id===currentPlayer.character)?.name || 'Frisk'}</span></div>
+    <div class="stat">🏆 Best Score: <span class="highlight">${currentPlayer.bestScore}</span></div>
+    <div class="stat">⏱️ Longest Run: <span class="highlight">${currentPlayer.longestTime.toFixed(1)}s</span></div>
+    <div class="stat">🎯 Total Dodges: <span class="highlight">${currentPlayer.totalDodges.toLocaleString()}</span></div>
+    ${currentPlayer.trueEnding ? '<div class="stat">👑 True Ending: <span class="highlight">UNLOCKED</span></div>' : ''}
+  `;
+  renderAchievements(currentPlayer);
+}
+function triggerTrueEnding() {
+  gameState = 'ending';
+  cancelAnimationFrame(animationId);
+  let fade = 0;
+  const fadeOut = setInterval(() => {
+    fade += 0.02;
+    ctx.fillStyle = `rgba(0,0,0,${fade})`;
+    ctx.fillRect(0, 0, 800, 600);
+    if (fade >= 1) {
+      clearInterval(fadeOut);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '28px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('sans', 400, 300);
+      setTimeout(() => {
+        hideAllScreens();
+        screens.gameOver.style.display = 'block';
+        document.querySelector('#gameOver>div:first-child').textContent = '👑 True Pacifist Ending';
+        document.querySelector('#gameOver>div:first-child').style.color = '#ffd700';
+        finalScoreEl.textContent = score.toFixed(0);
+        finalTimeEl.textContent = time.toFixed(1) + 's';
+        finalDodgesEl.textContent = dodges;
+      }, 1500);
+    }
+  }, 30);
+}
+function endGame() {
+  gameState = 'gameover';
+  cancelAnimationFrame(animationId);
+  const finalScore = Math.floor(score);
+  const run = { finalHP: hp, blueUses: blueActivations, lasersDodged, horizontalDodged };
+  if (currentPlayer) {
+    currentPlayer.bestScore = Math.max(currentPlayer.bestScore, finalScore);
+    currentPlayer.longestTime = Math.max(currentPlayer.longestTime, time);
+    currentPlayer.totalDodges += dodges;
+    currentPlayer.blueActivations += blueActivations;
+    currentPlayer.homingSurvived += homingWavesSurvived;
+    if (currentPlayer.undyneFreezes === undefined) currentPlayer.undyneFreezes = 0;
+    if (currentPlayer.papyrusPuzzles === undefined) currentPlayer.papyrusPuzzles = 0;
+    if (currentPlayer.gasterRifts === undefined) currentPlayer.gasterRifts = 0;
+    checkAchievements(currentPlayer, run).forEach(showAchievement);
+    db.save(currentPlayer);
+  }
+  finalScoreEl.textContent = finalScore;
+  finalTimeEl.textContent = time.toFixed(1) + 's';
+  finalDodgesEl.textContent = dodges;
+  hideAllScreens();
+  screens.gameOver.style.display = 'block';
+  fetchLeaderboard();
+}
+function gameLoop(ts) {
+  if (gameState !== 'playing') return;
+  const rawDelta = (ts - (lastTimestamp || ts)) / 1000;
+  const d = Math.min(0.1, rawDelta);
+  lastTimestamp = ts;
+  let timeScale = 1.0;
+  if (blueMode || gasterMode) timeScale *= 0.5;
+  if (undyneFreeze || gasterRift) timeScale = 0;
+  else if (undyneSlowAfter || gasterSlowAfter) timeScale *= 0.4;
+  else if (timeSlowActive) timeScale *= 0.3;
+  const dt = d * timeScale;
+  time += d;
+  let scoreInc = 10 * d;
+  if (rainbowMode) scoreInc *= 1.5;
+  score += scoreInc;
+  if (rainbowMode) {
+    soulSpeed = 420 * 1.1;
+    hp = Math.min(15, hp);
+  } else {
+    soulSpeed = 420;
+    hp = Math.min(10, hp);
+  }
+  const charId = currentPlayer?.character || 'frisk';
+  if (charId === 'frisk') {
+    friskDodgeCount++;
+    if (friskDodgeCount >= 10 && !friskSurge) {
+      friskSurge = true; friskSurgeTime = 5.0;
+      hp = Math.min(rainbowMode ? 15 : 10, hp + 1);
+      soulSpeed = 420 * 1.8;
+      sayQuote('surge');
+    }
+    if (friskSurge) {
+      friskSurgeTime -= d;
+      if (friskSurgeTime <= 0) {
+        friskSurge = false;
+        friskDodgeCount = 0;
+        soulSpeed = rainbowMode ? 420 * 1.1 : 420;
       }
-    });
-
-    generateImageBtn.addEventListener('click', () => {
-      generateImageModal.style.display = 'flex';
-    });
-
-    canvaSlideBtn.addEventListener('click', () => {
-      canvaSlideModal.style.display = 'flex';
-    });
-
-    posterBtn.addEventListener('click', () => {
-      posterModal.style.display = 'flex';
-    });
-
-    summarizeBtn.addEventListener('click', () => {
-      summarizeModal.style.display = 'flex';
-    });
-
-    translateBtn.addEventListener('click', () => {
-      translateModal.style.display = 'flex';
-    });
-
-    codeBtn.addEventListener('click', () => {
-      chatInput.value = 'Write code to ';
-      chatInput.focus();
-    });
-
-    creativeBtn.addEventListener('click', () => {
-      chatInput.value = 'Write a creative story about ';
-      chatInput.focus();
-    });
-
-    mathBtn.addEventListener('click', () => {
-      mathModal.style.display = 'flex';
-    });
-
-    explainBtn.addEventListener('click', () => {
-      chatInput.value = 'Explain like I\'m 5: ';
-      chatInput.focus();
-    });
-
-    grammarBtn.addEventListener('click', () => {
-      chatInput.value = 'Check grammar and improve: ';
-      chatInput.focus();
-    });
-
-    ideaBtn.addEventListener('click', () => {
-      chatInput.value = 'Give me creative ideas for: ';
-      chatInput.focus();
-    });
-
-    emailBtn.addEventListener('click', () => {
-      chatInput.value = 'Write a professional email about: ';
-      chatInput.focus();
-    });
-
-    debugBtn.addEventListener('click', () => {
-      chatInput.value = 'Debug this code: ';
-      chatInput.focus();
-    });
-
-    document.getElementById('generateImageCancelBtn').addEventListener('click', () => {
-      generateImageModal.style.display = 'none';
-    });
-
-    document.getElementById('canvaSlideCancelBtn').addEventListener('click', () => {
-      canvaSlideModal.style.display = 'none';
-    });
-
-    document.getElementById('posterCancelBtn').addEventListener('click', () => {
-      posterModal.style.display = 'none';
-    });
-
-    document.getElementById('summarizeCancel').addEventListener('click', () => {
-      summarizeModal.style.display = 'none';
-    });
-
-    document.getElementById('translateCancel').addEventListener('click', () => {
-      translateModal.style.display = 'none';
-    });
-
-    document.getElementById('mathCancel').addEventListener('click', () => {
-      mathModal.style.display = 'none';
-    });
-
-    document.getElementById('generateImageSubmit').addEventListener('click', async () => {
-      const prompt = document.getElementById('generateImageText').value.trim();
-      if (!prompt) return;
-      
-      generateImageModal.style.display = 'none';
-      document.getElementById('generateImageText').value = '';
-      
-      const bannedWords = [
-        'nude', 'naked', 'nsfw', 'explicit', 'sexual', 'porn', 'xxx', 
-        'topless', 'underwear', 'lingerie', 'bikini', 'erotic', 'sensual',
-        'adult', 'mature', 'sexy', 'seductive', 'revealing', 'exposed',
-        'undressed', 'unclothed', 'bare', 'strip', 'provocative'
-      ];
-      const lowerPrompt = prompt.toLowerCase();
-      
-      const foundBanned = bannedWords.find(word => lowerPrompt.includes(word));
-      if (foundBanned) {
-        addMessage(`🚫 Content blocked: Your prompt contains inappropriate content ("${foundBanned}"). Please describe appropriate images only.`, false);
-        return;
-      }
-      
-      addMessage(`🎨 Generating image: "${prompt}"`, true);
-      
-      const loadingMsg = document.createElement('div');
-      loadingMsg.className = 'message assistant';
-      loadingMsg.id = 'imageGenerating';
-      loadingMsg.innerHTML = '<div class="message-content">🎨 Creating your image... This may take 10-20 seconds ✨</div>';
-      chatMessages.appendChild(loadingMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      try {
-        const realisticPrompt = `masterpiece, best quality, ultra detailed, 8k uhd, photorealistic, professional photography, ${prompt}`;
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(realisticPrompt)}?width=1536&height=1536&nologo=true&model=flux&enhance=true&seed=${Date.now()}`;
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          
-          ctx.drawImage(img, 0, 0);
-          
-          ctx.font = 'bold 30px Arial';
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-          ctx.lineWidth = 2;
-          const watermarkText = "Gordon's Smart Brain";
-          const textWidth = ctx.measureText(watermarkText).width;
-          const x = canvas.width - textWidth - 20;
-          const y = canvas.height - 20;
-          ctx.strokeText(watermarkText, x, y);
-          ctx.fillText(watermarkText, x, y);
-          
-          const watermarkedImageUrl = canvas.toDataURL('image/png');
-          
-          document.getElementById('imageGenerating').remove();
-          
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message assistant';
-          
-          const messageContent = document.createElement('div');
-          messageContent.className = 'message-content';
-          
-          const title = document.createElement('strong');
-          title.textContent = '✨ Generated Image:';
-          messageContent.appendChild(title);
-          messageContent.appendChild(document.createElement('br'));
-          
-          const imgElement = document.createElement('img');
-          imgElement.src = watermarkedImageUrl;
-          imgElement.className = 'message-image';
-          imgElement.style.cssText = 'max-width: 100%; border-radius: 10px; margin-top: 10px;';
-          messageContent.appendChild(imgElement);
-          messageContent.appendChild(document.createElement('br'));
-          
-          const downloadBtn = document.createElement('button');
-          downloadBtn.textContent = '💾 Download';
-          downloadBtn.style.cssText = 'display: inline-block; margin-top: 10px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 15px; font-size: 12px; cursor: pointer; font-weight: bold;';
-          downloadBtn.addEventListener('click', async () => {
-            try {
-              const link = document.createElement('a');
-              link.href = watermarkedImageUrl;
-              link.download = `gordon-brain-${Date.now()}.png`;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              downloadBtn.textContent = '✅ Downloaded!';
-              setTimeout(() => downloadBtn.textContent = '💾 Download', 2000);
-            } catch (error) {
-              alert('Download failed. Right-click the image and select "Save Image As"');
+    }
+  }
+  if (charId === 'sans') {
+    if (dodges > 0 && dodges % 5 === 0 && !sansKarmaActive) {
+      sansKarma = dodges;
+      sansKarmaActive = true;
+      sansKarmaTime = 3.0;
+      sayQuote('karma');
+    }
+    if (sansKarmaActive) {
+      sansKarmaTime -= d;
+      if (sansKarmaTime <= 0) sansKarmaActive = false;
+    }
+  }
+  if (charId === 'papyrus') {
+    papyrusPuzzleCooldown -= d;
+    if (papyrusPuzzleCooldown <= 0 && !papyrusPuzzleActive) {
+      papyrusPuzzleActive = true;
+      spawnPuzzleBone();
+      sayQuote('puzzle');
+    }
+  }
+  if (charId === 'undyne') {
+    if (keys.Z && !keys.prevZ && !undyneFreeze && !undyneSlowAfter && timeSlowCooldown <= 0) {
+      undyneFreeze = true;
+      setTimeout(() => {
+        if (gameState === 'playing') {
+          undyneFreeze = false;
+          undyneSlowAfter = true;
+          undyneSlowAfterTime = 2.0;
+          if (currentPlayer) currentPlayer.undyneFreezes = (currentPlayer.undyneFreezes || 0) + 1;
+          db.save(currentPlayer);
+        }
+      }, 3000);
+      sayQuote('undyne');
+    }
+    if (undyneSlowAfter) { undyneSlowAfterTime -= d; if (undyneSlowAfterTime <= 0) { undyneSlowAfter = false; timeSlowCooldown = 6.7; } }
+    else if (timeSlowCooldown > 0) { timeSlowCooldown -= d; }
+  }
+  if (charId === 'gaster') {
+    if (keys.G && !keys.prevG && !gasterRift && !gasterSlowAfter && gasterCooldown <= 0) {
+      gasterRift = true;
+      bones.forEach(b => { b.vx = 0; b.vy = 0; b.frozen = true; });
+      setTimeout(() => {
+        if (gameState === 'playing') {
+          gasterRift = false;
+          gasterSlowAfter = true;
+          gasterSlowAfterTime = 1.5;
+          bones.forEach(b => {
+            if (b.frozen) {
+              b.frozen = false;
+              if (b.type === 'bone' && !b.oscillate) b.vy = 286 * SPEED_MULT;
             }
           });
-          messageContent.appendChild(downloadBtn);
-          
-          messageDiv.appendChild(messageContent);
-          chatMessages.appendChild(messageDiv);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-        img.onerror = () => {
-          document.getElementById('imageGenerating').remove();
-          addMessage('❌ Failed to generate image. Please try again with a different prompt.', false);
-        };
-        img.src = imageUrl;
-        
-      } catch (error) {
-        document.getElementById('imageGenerating').remove();
-        addMessage('❌ Image generation failed: ' + error.message, false);
+          if (currentPlayer) {
+            currentPlayer.gasterRifts = (currentPlayer.gasterRifts || 0) + 1;
+            db.save(currentPlayer);
+          }
+        }
+      }, 2000);
+      sayQuote('gasterRift');
+    }
+    if (gasterSlowAfter) { gasterSlowAfterTime -= d; if (gasterSlowAfterTime <= 0) { gasterSlowAfter = false; gasterCooldown = 8.0; } }
+    else if (gasterCooldown > 0) { gasterCooldown -= d; }
+  }
+  keys.prevZ = keys.Z; keys.prevG = keys.G;
+  if (dodgeInvincibility > 0) dodgeInvincibility -= d;
+  if (gasterMode && !rainbowMode && gasterDrainTimer > 0) {
+    gasterDrainTimer -= d;
+    if (gasterDrainTimer <= 0) { hp -= 0.5; gasterDrainTimer = 3; }
+  }
+  if (keys.Space && !keys.prevSpace) {
+    blueMode = !blueMode;
+    blueTime = blueMode ? (5 * blueTimeMult) : 0;
+    if (blueMode) blueActivations++;
+    sayQuote('blueMode');
+  }
+  keys.prevSpace = keys.Space;
+  if (blueMode) blueTime = Math.max(0, blueTime - d);
+  const moveDelta = (undyneFreeze || gasterRift) ? d : dt;
+  const s = soulSpeed * (blueMode || gasterMode ? 1.5 : 1);
+  if (keys.ArrowLeft) soulX = Math.max(0, soulX - s * moveDelta);
+  if (keys.ArrowRight) soulX = Math.min(770, soulX + s * moveDelta);
+  if (blueMode || gasterMode) {
+    if (keys.ArrowUp) soulY = Math.min(570, soulY + s * moveDelta);
+    if (keys.ArrowDown) soulY = Math.max(0, soulY - s * moveDelta);
+  } else {
+    if (keys.ArrowUp) soulY = Math.max(0, soulY - s * moveDelta);
+    if (keys.ArrowDown) soulY = Math.min(570, soulY + s * moveDelta);
+  }
+  if (time >= nextAttackTime && !gasterRift) spawnAttack();
+  if (!gasterRift) blasters.forEach(b => b.update(dt));
+  if (!undyneFreeze && !gasterRift) {
+    for (let i = bones.length - 1; i >= 0; i--) {
+      const b = bones[i];
+      if (b.type === 'homing' || b.type === 'horizontal_homing') {
+        b.targetX = soulX + 15; b.targetY = soulY + 15;
+        const dx = b.targetX - b.x, dy = b.targetY - b.y, dd = Math.sqrt(dx * dx + dy * dy);
+        if (dd > 1 && !b.frozen) {
+          const ax = dx / dd * b.acceleration * dt, ay = dy / dd * b.acceleration * dt;
+          b.vx += ax; b.vy += ay;
+          const sp = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+          if (sp > b.maxSpeed) { b.vx = b.vx / sp * b.maxSpeed; b.vy = b.vy / sp * b.maxSpeed; }
+        }
+        if (!b.frozen) { b.x += b.vx * dt; b.y += b.vy * dt; }
+        if (b.type === 'homing') b.pulse = (b.pulse + dt * 10) % (Math.PI * 2);
+        b.age += dt;
+        if (b.type === 'homing' && b.age >= b.maxAge && b.waveId === homingWaveId) homingWavesSurvived++;
       }
+      else if (b.oscillate && !b.frozen) { b.x = 400 + Math.sin(time * b.freq + b.phase) * b.amp; }
+      else if (b.type === 'puzzle') {
+        if (!b.frozen) b.x += b.vx * dt;
+        b.age += dt;
+        if (b.age > b.maxAge) { bones.splice(i, 1); papyrusPuzzleActive = false; }
+      } else if (!b.frozen) { b.x += b.vx * dt; b.y += b.vy * dt; }
+      const h = soulX < b.x + b.w && soulX + 30 > b.x && soulY < b.y + b.h && soulY + 30 > b.y;
+      let absorbed = false;
+      if (h) {
+        if (charId === 'sans' && sansKarmaActive && sansKarma === dodges) {
+          absorbed = true;
+          sansKarmaActive = false;
+          score += 30;
+          damagePopups.push({ text: 'karma', x: soulX+15, y: soulY-20, age: 0, color: '#ffaa55' });
+        }
+        if (!absorbed) {
+          hp--;
+          if (hp <= (rainbowMode ? 3 : 2)) sayQuote('lowHP');
+          damagePopups.push({ text: '-1', x: soulX + 15, y: soulY, age: 0, color: '#ff5555' });
+        }
+      } else { dodges++; }
+      if (b.frozen && !gasterRift) {
+        b.freezeTime = (b.freezeTime || 0) - d;
+        if (b.freezeTime <= 0) {
+          b.frozen = false;
+          if (b.type === 'bone' && !b.oscillate) b.vy = 286 * SPEED_MULT;
+        }
+      }
+      if ((b.type === 'laser' || b.type === 'horizontal_homing' && b.age > b.maxAge) || h || (b.x < -200 || b.x > 1000 || b.y < -200 || b.y > 800)) {
+        bones.splice(i, 1);
+      }
+    }
+  }
+  for (let i = rainbowParticles.length - 1; i >= 0; i--) {
+    const p = rainbowParticles[i];
+    p.x += p.vx * d; p.y += p.vy * d; p.life -= d; p.vy += 40 * d;
+    if (p.life <= 0) { rainbowParticles.splice(i, 1); continue; }
+    ctx.globalAlpha = (p.life / p.maxLife) * 0.8;
+    ctx.fillStyle = `hsl(${p.hue}, 100%, 70%)`; ctx.beginPath(); ctx.arc(p.x, p.y, 5 * (p.life / p.maxLife), 0, Math.PI*2); ctx.fill();
+  }
+  for (let i = explosionParticles.length - 1; i >= 0; i--) {
+    const p = explosionParticles[i];
+    p.x += p.vx * d; p.y += p.vy * d; p.life -= d; p.vy += 100 * d;
+    if (p.life <= 0) { explosionParticles.splice(i, 1); continue; }
+    ctx.globalAlpha = p.life / p.maxLife;
+    if (p.type === 'line') {
+      ctx.strokeStyle = p.color; ctx.lineWidth = p.size;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.02, p.y - p.vy * 0.02); ctx.stroke();
+    } else {
+      ctx.fillStyle = p.color; ctx.beginPath
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI*2); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  for (let i = damagePopups.length - 1; i >= 0; i--) {
+    damagePopups[i].age += d; damagePopups[i].y -= 70 * d;
+    if (damagePopups[i].age > 1) damagePopups.splice(i, 1);
+  }
+  // ✅ TRUE ENDING @ 800
+  if (score >= 800 && !currentPlayer?.trueEnding) {
+    triggerTrueEnding();
+    return;
+  }
+  // ✅ GIANT DEATH EXPLOSION
+  if (hp <= 0) {
+    sayQuote('death');
+    // 💥 Create massive explosion
+    createExplosion(soulX + 15, soulY + 15, '#ff55ff', 4.0);
+    // Add extra radial burst particles
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      explosionParticles.push({
+        x: soulX + 15, y: soulY + 15,
+        vx: Math.cos(angle) * 900, vy: Math.sin(angle) * 900,
+        size: 6, life: 1.0, maxLife: 1.0, color: '#ff55ff', type: 'dot'
+      });
+    }
+    endGame();
+    return;
+  }
+  // ✅ Render everything
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 800, 600);
+  bones.forEach(b => {
+    if (b.type === 'homing') {
+      const r = 12 + Math.sin(b.pulse * 1.2) * 4;
+      ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(b.x - 6, b.y - 2, 2, 0, Math.PI * 2); 
+      ctx.arc(b.x + 6, b.y - 2, 2, 0, Math.PI * 2); ctx.fill();
+    } else if (b.type === 'horizontal_homing') {
+      ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.w, b.h);
+    } else if (b.type === 'puzzle') {
+      ctx.fillStyle = '#ffff55'; ctx.beginPath(); ctx.arc(b.x + b.w/2, b.y + b.h/2, b.w/2, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#ff5555'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = '#ff5555'; ctx.font = 'bold 24px Courier New'; ctx.textAlign = 'center'; ctx.fillText('?', b.x + b.w/2, b.y + b.h/2 + 8);
+    } else {
+      ctx.fillStyle = b.color || '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
+    }
+  });
+  blasters.forEach(b => b.draw());
+  drawSoul();
+  // UI
+  ctx.fillStyle = '#fff';
+  ctx.font = '18px Courier New';
+  ctx.fillText(`SCORE: ${Math.floor(score)}`, 20, 28);
+  ctx.fillText(`TIME: ${time.toFixed(1)}s`, 20, 52);
+  ctx.fillText(`HP: ${hp.toFixed(1)}/${rainbowMode ? 15 : 10}`, 20, 76);
+  if (blueMode) {
+    const w = (blueTime / (5 * blueTimeMult)) * 80;
+    ctx.fillStyle = '#5588ff'; ctx.fillRect(20, 94, w, 6);
+    ctx.strokeStyle = '#fff'; ctx.strokeRect(20, 94, 80, 6);
+  }
+  if (gasterMode) {
+    ctx.fillStyle = '#ff5555';
+    ctx.fillText(`GASTER ${gasterDrainTimer > 0 ? '(safe)' : '(draining)'}`, 20, 112);
+  }
+  let y = 130;
+  if (friskSurge) { ctx.fillStyle = '#55ffaa'; ctx.fillText(`⚡ SURGE (${friskSurgeTime.toFixed(1)}s)`, 20, y); y += 20; }
+  if (sansKarmaActive) { ctx.fillStyle = '#ffaa55'; ctx.fillText(`⚖️ KARMA (${sansKarmaTime.toFixed(1)}s)`, 20, y); y += 20; }
+  if (papyrusPuzzleCooldown > 0 && !papyrusPuzzleActive) { ctx.fillStyle = '#ffff55'; ctx.fillText(`🧩 PUZZLE CD: ${papyrusPuzzleCooldown.toFixed(1)}s`, 20, y); y += 20; }
+  if (undyneFreeze) { ctx.fillStyle = '#5588ff'; ctx.fillText('🐉 FREEZE (3s)', 20, y); y += 20; }
+  else if (undyneSlowAfter) { ctx.fillStyle = '#5588ff'; ctx.fillText(`🐢 SLOW (${undyneSlowAfterTime.toFixed(1)}s)`, 20, y); y += 20; }
+  else if (timeSlowCooldown > 0) { ctx.fillStyle = '#ffaa55'; ctx.fillText(`⏱️ CD: ${timeSlowCooldown.toFixed(1)}s`, 20, y); y += 20; }
+  if (gasterRift) { ctx.fillStyle = '#8844aa'; ctx.fillText('🌀 CHRONO RIFT (2s)', 20, y); y += 20; }
+  else if (gasterSlowAfter) { ctx.fillStyle = '#8844aa'; ctx.fillText(`⏳ SLOW (${gasterSlowAfterTime.toFixed(1)}s)`, 20, y); y += 20; }
+  else if (gasterCooldown > 0) { ctx.fillStyle = '#ffaa55'; ctx.fillText(`⏱️ CD: ${gasterCooldown.toFixed(1)}s`, 20, y); y += 20; }
+  if (rainbowMode) {
+    ctx.fillStyle = `hsl(${rainbowHue}, 100%, 60%)`;
+    ctx.fillText('🌈 RAINBOW (15 HP, ×1.5 Score)', 20, y);
+  }
+  ctx.textAlign = 'center';
+  damagePopups.forEach(p => {
+    ctx.globalAlpha = Math.max(0, 1 - p.age);
+    ctx.fillStyle = p.color;
+    ctx.font = '22px Courier New';
+    ctx.fillText(p.text, p.x, p.y);
+  });
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+  animationId = requestAnimationFrame(gameLoop);
+}
+let lastTimestamp = 0;
+
+function initGame() {
+  hp = 10; time = 0; blueMode = false; blueTime = 0; soulX = 385; soulY = 285;
+  score = 0; dodges = 0; blueActivations = 0;
+  homingWavesSurvived = 0; lasersDodged = 0; horizontalDodged = 0;
+  bones = []; blasters = []; damagePopups = []; trailHistory.length = 0;
+  rainbowParticles.length = 0; explosionParticles.length = 0;
+  gasterMode = false; gasterDrainTimer = 10;
+  friskSurge = false; friskSurgeTime = 0; friskDodgeCount = 0;
+  sansKarma = 0; sansKarmaActive = false; sansKarmaTime = 0;
+  papyrusPuzzleCooldown = 8; papyrusPuzzleActive = false;
+  undyneFreeze = false; undyneSlowAfter = false; timeSlowCooldown = 0;
+  gasterRift = false; gasterSlowAfter = false; gasterCooldown = 0;
+  dodgeInvincibility = 0;
+  const char = CHARACTERS.find(c => c.id === (currentPlayer?.character || 'frisk')) || CHARACTERS[0];
+  selectedCharacter = char.id;
+  hp = rainbowMode ? 15 : 10;
+  soulSpeed = rainbowMode ? 420 * 1.1 : 420;
+  SPEED_MULT = 1.3;
+  blueTimeMult = 1.0;
+  if (char.id === 'sans') blueTimeMult = 2.0;
+  if (char.id === 'papyrus') { hp = rainbowMode ? 15 : 12; SPEED_MULT *= 0.8; }
+  if (char.id === 'undyne') soulSpeed *= 1.2;
+  blasters = [
+    new Blaster(180, 180),
+    new Blaster(620, 150, 25),
+    new Blaster(400, 480, -25)
+  ];
+  nextAttackTime = 0.5;
+  gameState = 'playing';
+  hideAllScreens();
+  lastTimestamp = performance.now();
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function hideAllScreens() {
+  Object.values(screens).forEach(s => s.style.display = 'none');
+}
+
+function renderCharSelectScreen() {
+  charOptions.innerHTML = '';
+  CHARACTERS.forEach(char => {
+    const div = document.createElement('div');
+    div.className = 'char-opt' + (selectedCharacter === char.id ? ' selected' : '');
+    div.dataset.id = char.id;
+    div.innerHTML = `<div class="char-color" style="background:${char.color}"></div><div><div class="char-name">${char.name}</div><div class="char-desc">${char.desc}</div></div>`;
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.char-opt').forEach(d => d.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedCharacter = char.id;
     });
+    charOptions.appendChild(div);
+  });
+}
 
-    document.getElementById('generateVideoSubmit').addEventListener('click', async () => {
-      const prompt = document.getElementById('generateVideoText').value.trim();
-      if (!prompt) return;
-      
-      generateVideoModal.style.display = 'none';
-      document.getElementById('generateVideoText').value = '';
-      
-      const bannedWords = [
-        'nude', 'naked', 'nsfw', 'explicit', 'sexual', 'porn', 'xxx', 
-        'topless', 'underwear', 'lingerie', 'bikini', 'erotic', 'sensual',
-        'adult', 'mature', 'sexy', 'seductive', 'revealing', 'exposed',
-        'undressed', 'unclothed', 'bare', 'strip', 'provocative'
-      ];
-      const lowerPrompt = prompt.toLowerCase();
-      const foundBanned = bannedWords.find(word => lowerPrompt.includes(word));
-      if (foundBanned) {
-        addMessage(`🚫 Content blocked: Your prompt contains inappropriate content ("${foundBanned}").`, false);
-        return;
-      }
-      
-      addMessage(`🎬 Generating 30s video: "${prompt}"`, true);
-      
-      const loadingMsg = document.createElement('div');
-      loadingMsg.className = 'message assistant';
-      loadingMsg.id = 'videoGenerating';
-      loadingMsg.innerHTML = '<div class="message-content">⏳ Generating video... (This may take 30-60 seconds) ✨</div>';
-      chatMessages.appendChild(loadingMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      try {
-        // Using Pollinations AI for video generation with higher quality
-        const videoPrompt = `cinematic masterpiece, ${prompt}, ultra smooth motion, high quality 4k video, professional cinematography`;
-        const videoUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(videoPrompt)}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}&enhance=true`;
-        
-        // Create a temporary image to check if loaded
-        const testImg = new Image();
-        testImg.crossOrigin = 'anonymous';
-        
-        testImg.onload = () => {
-          document.getElementById('videoGenerating')?.remove();
-          
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message assistant';
-          
-          const messageContent = document.createElement('div');
-          messageContent.className = 'message-content';
-          messageContent.innerHTML = '<strong>🎬 Video Generated:</strong><br>';
-          
-          // Create video element
-          const videoContainer = document.createElement('div');
-          videoContainer.style.cssText = 'position: relative; max-width: 100%; margin: 10px 0;';
-          
-          const videoImg = document.createElement('img');
-          videoImg.src = videoUrl;
-          videoImg.style.cssText = 'max-width: 100%; border-radius: 10px; display: block;';
-          videoImg.alt = 'Generated Video';
-          
-          videoContainer.appendChild(videoImg);
-          messageContent.appendChild(videoContainer);
-          messageContent.appendChild(document.createElement('br'));
-          
-          // Preview button
-          const previewBtn = document.createElement('button');
-          previewBtn.textContent = '👁️ Preview';
-          previewBtn.style.cssText = 'padding: 6px 12px; background: #764ba2; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 5px; margin-right: 8px;';
-          previewBtn.addEventListener('click', () => {
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 10000; cursor: pointer;';
-            
-            const previewImg = document.createElement('img');
-            previewImg.src = videoUrl;
-            previewImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 10px;';
-            
-            modal.appendChild(previewImg);
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', () => {
-              document.body.removeChild(modal);
-            });
-          });
-          messageContent.appendChild(previewBtn);
-          
-          // Download button
-          const downloadBtn = document.createElement('button');
-          downloadBtn.textContent = '💾 Download';
-          downloadBtn.style.cssText = 'padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 5px;';
-          downloadBtn.addEventListener('click', async () => {
-            try {
-              const link = document.createElement('a');
-              link.href = videoUrl;
-              link.download = `video-${Date.now()}.gif`;
-              link.target = '_blank';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              downloadBtn.textContent = '✅ Downloaded!';
-              setTimeout(() => downloadBtn.textContent = '💾 Download', 2000);
-            } catch (error) {
-              alert('Download failed. Right-click the video and select "Save Image As"');
-            }
-          });
-          messageContent.appendChild(downloadBtn);
-          
-          // Info note
-          const infoNote = document.createElement('p');
-          infoNote.style.cssText = 'color: #666; font-size: 11px; margin-top: 10px;';
-          infoNote.textContent = '🎥 Animated video created. For full MP4 format, use Runway ML or Pika Labs.';
-          messageContent.appendChild(infoNote);
-          
-          messageDiv.appendChild(messageContent);
-          chatMessages.appendChild(messageDiv);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-        
-        testImg.onerror = () => {
-          document.getElementById('videoGenerating')?.remove();
-          addMessage('❌ Video generation failed. Please try again with a different prompt.', false);
-        };
-        
-        testImg.src = videoUrl;
-        
-      } catch (error) {
-        document.getElementById('videoGenerating')?.remove();
-        addMessage('❌ Video generation failed: ' + error.message, false);
-      }
-    });
-
-    document.getElementById('canvaSlideSubmit').addEventListener('click', async () => {
-      const prompt = document.getElementById('canvaSlideText').value.trim();
-      if (!prompt) return;
-      
-      canvaSlideModal.style.display = 'none';
-      document.getElementById('canvaSlideText').value = '';
-      
-      addMessage(`📊 Creating slide: "${prompt}"`, true);
-      
-      const loadingMsg = document.createElement('div');
-      loadingMsg.className = 'message assistant';
-      loadingMsg.id = 'slideGenerating';
-      loadingMsg.innerHTML = '<div class="message-content">📊 Designing your slide... ✨</div>';
-      chatMessages.appendChild(loadingMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      try {
-        const slidePrompt = `professional presentation slide, ${prompt}, clean modern design, business layout, infographic style, ultra high quality, 8k, sharp, detailed`;
-        const slideUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slidePrompt)}?width=2880&height=1620&nologo=true&enhance=true&seed=${Date.now()}`;
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          document.getElementById('slideGenerating')?.remove();
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          
-          ctx.font = 'bold 25px Arial';
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-          ctx.lineWidth = 2;
-          const watermarkText = "Gordon's Smart Brain";
-          const textWidth = ctx.measureText(watermarkText).width;
-          const x = canvas.width - textWidth - 20;
-          const y = canvas.height - 20;
-          ctx.strokeText(watermarkText, x, y);
-          ctx.fillText(watermarkText, x, y);
-          
-          const watermarkedUrl = canvas.toDataURL('image/png');
-          
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message assistant';
-          
-          const messageContent = document.createElement('div');
-          messageContent.className = 'message-content';
-          messageContent.innerHTML = '<strong>📊 Canva-Style Slide Created:</strong><br>';
-          
-          const slideImg = document.createElement('img');
-          slideImg.src = watermarkedUrl;
-          slideImg.style.cssText = 'max-width: 100%; border-radius: 10px; margin: 10px 0;';
-          messageContent.appendChild(slideImg);
-          messageContent.appendChild(document.createElement('br'));
-          
-          const downloadBtn = document.createElement('button');
-          downloadBtn.textContent = '💾 Download Slide';
-          downloadBtn.style.cssText = 'padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 5px;';
-          downloadBtn.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = watermarkedUrl;
-            a.download = `slide-${Date.now()}.png`;
-            a.click();
-            downloadBtn.textContent = '✅ Downloaded!';
-            setTimeout(() => downloadBtn.textContent = '💾 Download Slide', 2000);
-          });
-          messageContent.appendChild(downloadBtn);
-          
-          messageDiv.appendChild(messageContent);
-          chatMessages.appendChild(messageDiv);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-        img.onerror = () => {
-          document.getElementById('slideGenerating')?.remove();
-          addMessage('❌ Slide creation failed. Please try again.', false);
-        };
-        img.src = slideUrl;
-        
-      } catch (error) {
-        document.getElementById('slideGenerating')?.remove();
-        addMessage('❌ Slide creation failed: ' + error.message, false);
-      }
-    });
-
-    document.getElementById('posterSubmit').addEventListener('click', async () => {
-      const prompt = document.getElementById('posterText').value.trim();
-      if (!prompt) return;
-      
-      posterModal.style.display = 'none';
-      document.getElementById('posterText').value = '';
-      
-      const bannedWords = [
-        'nude', 'naked', 'nsfw', 'explicit', 'sexual', 'porn', 'xxx', 
-        'topless', 'underwear', 'lingerie', 'bikini', 'erotic', 'sensual',
-        'adult', 'mature', 'sexy', 'seductive', 'revealing', 'exposed',
-        'undressed', 'unclothed', 'bare', 'strip', 'provocative'
-      ];
-      const lowerPrompt = prompt.toLowerCase();
-      const foundBanned = bannedWords.find(word => lowerPrompt.includes(word));
-      if (foundBanned) {
-        addMessage(`🚫 Content blocked: Your prompt contains inappropriate content ("${foundBanned}").`, false);
-        return;
-      }
-      
-      addMessage(`🖼️ Creating poster: "${prompt}"`, true);
-      
-      const loadingMsg = document.createElement('div');
-      loadingMsg.className = 'message assistant';
-      loadingMsg.id = 'posterGenerating';
-      loadingMsg.innerHTML = '<div class="message-content">🖼️ Designing your poster... ✨</div>';
-      chatMessages.appendChild(loadingMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      try {
-        const posterPrompt = `professional poster design, ${prompt}, eye-catching typography, vibrant colors, ultra high quality print, modern layout, 8k resolution, sharp details`;
-        const posterUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(posterPrompt)}?width=1728&height=2304&nologo=true&enhance=true&seed=${Date.now()}`;
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          document.getElementById('posterGenerating')?.remove();
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          
-          ctx.font = 'bold 40px Arial';
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-          ctx.lineWidth = 3;
-          const watermarkText = "Gordon's Smart Brain";
-          const textWidth = ctx.measureText(watermarkText).width;
-          const x = canvas.width - textWidth - 30;
-          const y = canvas.height - 30;
-          ctx.strokeText(watermarkText, x, y);
-          ctx.fillText(watermarkText, x, y);
-          
-          const watermarkedUrl = canvas.toDataURL('image/png');
-          
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message assistant';
-          
-          const messageContent = document.createElement('div');
-          messageContent.className = 'message-content';
-          messageContent.innerHTML = '<strong>🖼️ Poster Design Created:</strong><br>';
-          
-          const posterImg = document.createElement('img');
-          posterImg.src = watermarkedUrl;
-          posterImg.style.cssText = 'max-width: 100%; border-radius: 10px; margin: 10px 0;';
-          messageContent.appendChild(posterImg);
-          messageContent.appendChild(document.createElement('br'));
-          
-          const downloadBtn = document.createElement('button');
-          downloadBtn.textContent = '💾 Download Poster';
-          downloadBtn.style.cssText = 'padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 5px;';
-          downloadBtn.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = watermarkedUrl;
-            a.download = `poster-${Date.now()}.png`;
-            a.click();
-            downloadBtn.textContent = '✅ Downloaded!';
-            setTimeout(() => downloadBtn.textContent = '💾 Download Poster', 2000);
-          });
-          messageContent.appendChild(downloadBtn);
-          
-          messageDiv.appendChild(messageContent);
-          chatMessages.appendChild(messageDiv);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-        img.onerror = () => {
-          document.getElementById('posterGenerating')?.remove();
-          addMessage('❌ Poster creation failed. Please try again.', false);
-        };
-        img.src = posterUrl;
-        
-      } catch (error) {
-        document.getElementById('posterGenerating')?.remove();
-        addMessage('❌ Poster creation failed: ' + error.message, false);
-      }
-    });
-
-    document.getElementById('summarizeSubmit').addEventListener('click', () => {
-      const text = document.getElementById('summarizeText').value;
-      if (text) {
-        chatInput.value = `Please summarize this text: ${text}`;
-        summarizeModal.style.display = 'none';
-        document.getElementById('summarizeText').value = '';
-        sendMessage();
-      }
-    });
-
-    document.getElementById('translateSubmit').addEventListener('click', () => {
-      const text = document.getElementById('translateText').value;
-      const lang = document.getElementById('translateLang').value;
-      if (text && lang) {
-        chatInput.value = `Translate this to ${lang}: ${text}`;
-        translateModal.style.display = 'none';
-        document.getElementById('translateText').value = '';
-        document.getElementById('translateLang').value = '';
-        sendMessage();
-      }
-    });
-
-    document.getElementById('mathSubmit').addEventListener('click', () => {
-      const text = document.getElementById('mathText').value;
-      if (text) {
-        chatInput.value = `Solve this math problem step by step: ${text}`;
-        mathModal.style.display = 'none';
-        document.getElementById('mathText').value = '';
-        sendMessage();
-      }
-    });
-
-    window.addEventListener('click', (e) => {
-      if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
-      }
-    });
-
-    imageButton.addEventListener('click', () => {
-      imageInput.click();
-    });
-
-    imageInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        currentImage = {
-          data: event.target.result.split(',')[1],
-          type: file.type
-        };
-        
-        imagePreviewContainer.innerHTML = `
-          <div style="padding: 10px 0;">
-            <img src="${event.target.result}" class="image-preview" />
-            <br>
-            <button class="remove-image" id="removeImageBtn">Remove Image</button>
-          </div>
-        `;
-
-        document.getElementById('removeImageBtn').addEventListener('click', () => {
-          currentImage = null;
-          imagePreviewContainer.innerHTML = '';
-          imageInput.value = '';
-        });
+async function loadPlayer(username, forceNew = false) {
+  try {
+    if (!username?.trim()) return;
+    username = username.trim().slice(0, 16);
+    let player = forceNew ? null : await db.get(username);
+    if (!player) {
+      player = {
+        username, bestScore: 0, longestTime: 0, totalDodges: 0,
+        blueActivations: 0, homingSurvived: 0, achievements: [],
+        soulColor: 'red', soulShape: 'square', soulTrail: 'none',
+        character: 'frisk', createdAt: Date.now()
       };
-      reader.readAsDataURL(file);
+    }
+    currentPlayer = player;
+    soulColor = player.soulColor || 'red';
+    soulShape = player.soulShape || 'square';
+    soulTrail = player.soulTrail || 'none';
+    selectedCharacter = player.character || 'frisk';
+    trailHistory.length = 0;
+    rainbowMode = false; // reset on load
+    updateStatsUI();
+    setTimeout(() => {
+      hideAllScreens();
+      renderCustomScreen();
+      screens.custom.style.display = 'block';
+      gameState = 'custom';
+    }, 0);
+  } catch (e) {
+    alert("Load failed. Try again.");
+  }
+}
+
+function renderCustomScreen() {
+  colorOptions.innerHTML = '';
+  Object.keys(COLORS).forEach(key => {
+    const div = document.createElement('div');
+    div.className = 'color-opt' + (soulColor === key ? ' selected' : '');
+    div.style.backgroundColor = COLORS[key];
+    div.dataset.value = key;
+    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.color-opt').forEach(d => d.classList.remove('selected'));
+      div.classList.add('selected');
+      soulColor = key;
     });
-
-    function addMessage(content, isUser, imageData = null) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
-      
-      const messageContent = document.createElement('div');
-      messageContent.className = 'message-content';
-      
-      if (imageData) {
-        const img = document.createElement('img');
-        img.src = `data:${imageData.type};base64,${imageData.data}`;
-        img.className = 'message-image';
-        messageContent.appendChild(img);
-        
-        if (content) {
-          const text = document.createElement('div');
-          text.textContent = content;
-          messageContent.appendChild(text);
-        }
-      } else {
-        const formattedContent = formatContent(content);
-        messageContent.innerHTML = formattedContent;
-      }
-      
-      messageDiv.appendChild(messageContent);
-      chatMessages.appendChild(messageDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-
-      messageContent.querySelectorAll('.code-block').forEach(block => {
-        const copyBtn = block.querySelector('.copy-code-btn');
-        if (copyBtn) {
-          copyBtn.addEventListener('click', () => {
-            const code = block.textContent.replace('📋 Copy', '').replace('Copied!', '').trim();
-            navigator.clipboard.writeText(code);
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => copyBtn.textContent = '📋 Copy', 2000);
-          });
-        }
-      });
-    }
-
-    function formatContent(content) {
-      let formatted = escapeHtml(content);
-      
-      if (formatted.includes('```')) {
-        formatted = formatted.split('```').map((part, index) => {
-          if (index % 2 === 1) {
-            const lines = part.split('\n');
-            const lang = lines[0];
-            const code = lines.slice(1).join('\n');
-            return `<div class="code-block"><button class="copy-code-btn">📋 Copy</button>${code}</div>`;
-          }
-          return formatText(part);
-        }).join('');
-      } else {
-        formatted = formatText(formatted);
-      }
-      
-      return formatted;
-    }
-
-    function formatText(text) {
-      return text
-        .replace(/### (.*?)(\n|$)/g, '<h3>$1</h3>')
-        .replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>')
-        .replace(/# (.*?)(\n|$)/g, '<h1>$1</h1>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #d63384;">$1</code>')
-        .replace(/^\s*[-•]\s+(.+)$/gm, '<li>$1</li>')
-        .replace(/\b(\d+%|\$\d+[\d,]*\.?\d*|\d+[\d,]*\.?\d*\s*(?:million|billion|thousand|years?|months?|days?|hours?|minutes?|seconds?))\b/gi, '<span class="highlight">$1</span>')
-        .replace(/\n{2,}/g, '<br>')
-        .replace(/\n/g, ' ');
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function showTypingIndicator() {
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'message assistant';
-      typingDiv.id = 'typingIndicator';
-      
-      const messageContent = document.createElement('div');
-      messageContent.className = 'message-content';
-      messageContent.style.minHeight = '30px';
-      
-      const indicator = document.createElement('div');
-      indicator.className = 'typing-indicator';
-      indicator.innerHTML = '<span></span><span></span><span></span>';
-      
-      messageContent.appendChild(indicator);
-      typingDiv.appendChild(messageContent);
-      chatMessages.appendChild(typingDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function removeTypingIndicator() {
-      const indicator = document.getElementById('typingIndicator');
-      if (indicator) {
-        indicator.remove();
-      }
-    }
-
-    function typewriterEffect(element, text, speed = 5) {
-      return new Promise((resolve) => {
-        let index = 0;
-        element.innerHTML = '';
-        
-        function type() {
-          if (index < text.length) {
-            if (text[index] === '<') {
-              const closingIndex = text.indexOf('>', index);
-              if (closingIndex !== -1) {
-                element.innerHTML += text.substring(index, closingIndex + 1);
-                index = closingIndex + 1;
-              } else {
-                element.innerHTML += text[index];
-                index++;
-              }
-            } else {
-              element.innerHTML += text[index];
-              index++;
-            }
-            
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            setTimeout(type, speed);
-          } else {
-            resolve();
-          }
-        }
-        
-        type();
-      });
-    }
-
-    async function sendMessage() {
-      const message = chatInput.value.trim();
-      console.log('Send button clicked!', {message, currentImage, apiKey: apiKey ? 'EXISTS' : 'MISSING'});
-      
-      if (!message && !currentImage) {
-        console.log('No message or image, returning');
-        return;
-      }
-      
-      // Allow sending without strict validation
-      if (!apiKey) {
-        console.log('No API key found, trying to get from input');
-        apiKey = apiKeyInput.value.trim();
-        if (!apiKey) {
-          alert('⚠️ Please enter an API key first!');
-          apiKeyContainer.classList.add('visible');
-          apiKeyContainer.classList.remove('hidden');
-          apiKeyInput.focus();
-          return;
-        }
-      }
-
-      const now = Date.now();
-      const timeSinceLastRequest = now - lastRequestTime;
-      if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-        console.log('Rate limited, ignoring');
-        return;
-      }
-      lastRequestTime = now;
-
-      const imageToSend = currentImage;
-      
-      console.log('Adding user message to chat');
-      if (imageToSend) {
-        addMessage(message || 'Analyze this image', true, imageToSend);
-      } else {
-        addMessage(message, true);
-      }
-      
-      chatInput.value = '';
-      sendButton.disabled = true;
-
-      const messageContent = [];
-      
-      if (imageToSend) {
-        messageContent.push({
-          type: 'image',
-          source: {
-            type: 'base64',
-            media_type: imageToSend.type,
-            data: imageToSend.data
-          }
-        });
-      }
-      
-      if (message) {
-        messageContent.push({
-          type: 'text',
-          text: message
-        });
-      } else if (imageToSend) {
-        messageContent.push({
-          type: 'text',
-          text: 'What do you see in this image?'
-        });
-      }
-
-      conversationHistory.push({ 
-        role: 'user', 
-        content: messageContent
-      });
-
-      currentImage = null;
-      imagePreviewContainer.innerHTML = '';
-      imageInput.value = '';
-
-      console.log('Showing typing indicator');
-      showTypingIndicator();
-
-      try {
-        const apiUrl = 'https://api.anthropic.com/v1/messages';
-        
-        console.log('Making API request...');
-        const thinkingModePrompt = "You are Gordon's Smart Brain in Thinking Mode. Provide detailed, thorough responses with depth and reasoning. Break down complex topics logically. Use **bold** for key points. Structure with headers and lists. Be comprehensive but avoid excessive line breaks - keep formatting tight and readable.";
-        
-        const quickModePrompt = "You are Gordon's Smart Brain in Quick Mode. Give brief, direct answers in 2-3 sentences. Be concise and to the point. Use **bold** for key information. No extra spacing or elaboration unless critical.";
-        
-        const systemPrompt = isThinkingMode ? thinkingModePrompt : quickModePrompt;
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01'
-          },
-          signal: AbortSignal.timeout(180000),
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: isThinkingMode ? 1536 : 384,
-            system: systemPrompt,
-            messages: conversationHistory,
-            tools: []
-          })
-        });
-
-        console.log('API response status:', response.status);
-        const data = await response.json();
-        console.log('API response data:', data);
-        removeTypingIndicator();
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            addMessage('❌ Invalid API Key. Please check your API key and try again.', false);
-            updateApiKeyStatus(false);
-            localStorage.removeItem('anthropic_api_key');
-          } else {
-            addMessage(`❌ Error: ${data.error?.message || 'Unknown error occurred'}`, false);
-          }
-          sendButton.disabled = false;
-          return;
-        }
-
-        if (data.content && data.content.length > 0) {
-          let fullResponse = '';
-          let toolsUsed = [];
-
-          for (const block of data.content) {
-            if (block.type === 'text') {
-              fullResponse += block.text;
-            } else if (block.type === 'tool_use') {
-              toolsUsed.push(block.name);
-            }
-          }
-
-          if (toolsUsed.length > 0) {
-            const toolIndicators = toolsUsed.map(tool => 
-              `<span class="tool-indicator">${tool === 'web_search' ? '🔍 Web Search' : tool}</span>`
-            ).join('');
-            fullResponse = toolIndicators + '<br>' + fullResponse;
-          }
-
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message assistant';
-          
-          const messageContent = document.createElement('div');
-          messageContent.className = 'message-content';
-          
-          messageDiv.appendChild(messageContent);
-          chatMessages.appendChild(messageDiv);
-          
-          console.log('Starting typewriter effect');
-          const formattedResponse = formatContent(fullResponse || 'I processed your request!');
-          await typewriterEffect(messageContent, formattedResponse, 5);
-          
-          messageContent.querySelectorAll('.code-block').forEach(block => {
-            const copyBtn = block.querySelector('.copy-code-btn');
-            if (copyBtn) {
-              copyBtn.addEventListener('click', () => {
-                const code = block.textContent.replace('📋 Copy', '').replace('Copied!', '').trim();
-                navigator.clipboard.writeText(code);
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => copyBtn.textContent = '📋 Copy', 2000);
-              });
-            }
-          });
-          
-          conversationHistory.push({ 
-            role: 'assistant', 
-            content: data.content 
-          });
-        } else {
-          addMessage('Sorry, I encountered an error. Please try again.', false);
-        }
-      } catch (error) {
-        removeTypingIndicator();
-        console.error('Error details:', error);
-        
-        if (error.name === 'AbortError' || error.message.includes('timeout')) {
-          addMessage('⏱️ Request timed out! Try a simpler question. 🔄', false);
-        } else if (error.message.includes('rate limit') || error.message.includes('429')) {
-          addMessage('⚠️ Too many requests. Please wait a moment.', false);
-        } else if (error.message.includes('CORS') || error.message.includes('fetch')) {
-          addMessage('🌐 Connection error. Check your internet connection. 🔄', false);
-        } else {
-          addMessage('❌ Error: ' + error.message + ' - Check browser console for details.', false);
-        }
-      }
-
-      sendButton.disabled = false;
-      chatInput.focus();
-    }
-
-    sendButton.addEventListener('click', () => {
-      console.log('SEND BUTTON CLICKED!');
-      sendMessage();
+    colorOptions.appendChild(div);
+  });
+  shapeOptions.innerHTML = '';
+  SHAPES.forEach(key => {
+    const div = document.createElement('div');
+    div.className = 'shape-opt' + (soulShape === key ? ' selected' : '');
+    div.dataset.value = key;
+    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.shape-opt').forEach(d => d.classList.remove('selected'));
+      div.classList.add('selected');
+      soulShape = key;
     });
-    
-    chatInput.addEventListener('keypress', (e) => {
-      console.log('Key pressed:', e.key);
-      if (e.key === 'Enter') {
-        console.log('ENTER KEY PRESSED!');
-        sendMessage();
+    shapeOptions.appendChild(div);
+  });
+  trailOptions.innerHTML = '';
+  TRAILS.forEach(key => {
+    const div = document.createElement('div');
+    div.className = 'trail-opt' + (soulTrail === key ? ' selected' : '');
+    div.dataset.value = key;
+    div.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.trail-opt').forEach(d => d.classList.remove('selected'));
+      div.classList.add('selected');
+      soulTrail = key;
+    });
+    trailOptions.appendChild(div);
+  });
+}
+
+async function refreshUsers() {
+  try {
+    const players = await db.getAll();
+    userListEl.innerHTML = players.length ?
+      players.map(p => `<div class="user-item" data-username="${p.username}">→ ${p.username}</div>`).join('') :
+      '<div>No players</div>';
+    userListEl.addEventListener('click', (e) => {
+      if (e.target.classList.contains('user-item')) {
+        const username = e.target.dataset.username;
+        loadPlayer(username, false);
       }
     });
+  } catch (e) {
+    userListEl.innerHTML = '<div>Load failed</div>';
+  }
+}
 
-    // Test on page load
-    console.log('=== GORDON BRAIN DEBUG ===');
-    console.log('Send button exists:', !!sendButton);
-    console.log('Chat input exists:', !!chatInput);
-    console.log('API Key:', apiKey ? 'SET' : 'NOT SET');
-    console.log('Send button disabled?', sendButton.disabled);
-    
-    chatInput.focus();
-  </script>
+function showStartScreen() {
+  updateStatsUI();
+  hideAllScreens();
+  screens.start.style.display = 'block';
+  gameState = 'menu';
+}
+
+function showCustomScreen() {
+  updateStatsUI();
+  hideAllScreens();
+  renderCustomScreen();
+  screens.custom.style.display = 'block';
+  gameState = 'custom';
+}
+
+function showCharSelectScreen() {
+  updateStatsUI();
+  hideAllScreens();
+  renderCharSelectScreen();
+  screens.charSelect.style.display = 'block';
+  gameState = 'charSelect';
+}
+
+function showAchievementsScreen() {
+  updateStatsUI();
+  hideAllScreens();
+  screens.achievements.style.display = 'block';
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => loadPlayer(usernameInput.value, false));
+document.getElementById('newPlayerBtn').addEventListener('click', () => loadPlayer(usernameInput.value, true));
+document.getElementById('saveCustomBtn').addEventListener('click', () => {
+  if (currentPlayer) {
+    currentPlayer.soulColor = soulColor;
+    currentPlayer.soulShape = soulShape;
+    currentPlayer.soulTrail = soulTrail;
+    db.save(currentPlayer);
+  }
+  showCharSelectScreen();
+});
+document.getElementById('skipCustomBtn').addEventListener('click', showCharSelectScreen);
+document.getElementById('confirmCharBtn').addEventListener('click', () => {
+  if (currentPlayer) {
+    currentPlayer.character = selectedCharacter;
+    db.save(currentPlayer);
+  }
+  showStartScreen();
+});
+document.getElementById('backToCustomBtn').addEventListener('click', showCustomScreen);
+document.getElementById('startBtn').addEventListener('click', initGame);
+document.getElementById('retryBtn').addEventListener('click', () => {
+  if (currentPlayer && currentPlayer.character) {
+    selectedCharacter = currentPlayer.character;
+  }
+  initGame();
+});
+document.getElementById('changeCharBtn').addEventListener('click', showCharSelectScreen);
+document.getElementById('switchPlayerBtn').addEventListener('click', () => {
+  hideAllScreens();
+  screens.auth.style.display = 'block';
+  gameState = 'auth';
+});
+document.getElementById('menuBtn').addEventListener('click', showStartScreen);
+document.getElementById('achievementsBtn').addEventListener('click', showAchievementsScreen);
+document.getElementById('backToStartBtn').addEventListener('click', showStartScreen);
+
+// Secret Code: "676767"
+let typedCode = '';
+const SECRET_CODE = '676767';
+window.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') return;
+  if (e.key === '6' || e.key === '7') {
+    typedCode += e.key;
+    if (typedCode.length > SECRET_CODE.length) typedCode = typedCode.slice(-SECRET_CODE.length);
+    if (typedCode === SECRET_CODE) {
+      typedCode = '';
+      rainbowMode = true;
+      if (currentPlayer) {
+        currentPlayer.rainbowUnlocked = true;
+        db.save(currentPlayer);
+      }
+      sayQuote('rainbow');
+    }
+  }
+  if (e.key in keys) keys[e.key] = true;
+  if (e.key === ' ') { keys.Space = true; e.preventDefault(); }
+  if (e.key === 'z' || e.key === 'Z') { keys.Z = true; }
+  if (e.key === 'g' || e.key === 'G') { keys.G = true; }
+});
+window.addEventListener('keyup', e => {
+  if (e.key in keys) keys[e.key] = false;
+  if (e.key === ' ') { keys.Space = false; e.preventDefault(); }
+  if (e.key === 'z' || e.key === 'Z') { keys.Z = false; }
+  if (e.key === 'g' || e.key === 'G') { keys.G = false; }
+});
+
+refreshUsers();
+});
+</script>
 </body>
 </html>
